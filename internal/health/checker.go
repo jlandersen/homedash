@@ -106,7 +106,7 @@ func (c *Checker) GetStatuses() []AppStatus {
 	result := make([]AppStatus, 0, len(apps))
 
 	for i, app := range apps {
-		key := app.URL
+		key := app.Name + "|" + app.URL
 		if status, ok := c.statuses[key]; ok {
 			status.ID = i + 1
 			result = append(result, *status)
@@ -162,7 +162,7 @@ func (c *Checker) checkApp(idx int, app manifest.App) {
 	}
 
 	c.mu.Lock()
-	c.statuses[app.URL] = &AppStatus{
+	c.statuses[app.Name+"|"+app.URL] = &AppStatus{
 		ID:       idx + 1,
 		Name:     app.Name,
 		URL:      app.URL,

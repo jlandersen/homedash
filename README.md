@@ -3,6 +3,8 @@
 A simple, self-hosted application dashboard for self hosted applications. 
 Minimal dependencies, single binary, easy configuration via YAML manifest.
 
+![Screenshot](screen.png)
+
 ![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
