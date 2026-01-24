@@ -310,7 +310,7 @@ function renderApps(appList) {
 
 function renderAppCard(app) {
     const icon = ICONS[app.icon] || ICONS.box;
-    const statusClass = app.status === 'UP' ? 'up' : app.status === 'DOWN' ? 'down' : '';
+    const statusClass = app.status === 'UP' ? 'up' : app.status === 'DOWN' ? 'down' : app.status === 'SKIPPED' ? 'skipped' : '';
     
     return `
         <a class="app-card" href="${escapeHtml(app.url)}" target="_blank" rel="noopener noreferrer">

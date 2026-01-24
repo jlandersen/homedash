@@ -510,6 +510,10 @@ body.light .sun-icon {
     box-shadow: 0 0 8px var(--status-down-glow);
 }
 
+.status-dot.skipped {
+    background: var(--status-unknown);
+}
+
 .status-text {
     font-size: 0.65rem;
     font-weight: 500;

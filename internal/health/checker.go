@@ -21,6 +21,7 @@ const (
 	StatusUp      Status = "UP"
 	StatusDown    Status = "DOWN"
 	StatusUnknown Status = "UNKNOWN"
+	StatusSkipped Status = "SKIPPED"
 )
 
 // AppStatus holds the current status of an app
@@ -111,13 +112,18 @@ func (c *Checker) GetStatuses() []AppStatus {
 			status.ID = i + 1
 			result = append(result, *status)
 		} else {
+			// Determine initial status based on skip_check setting
+			initialStatus := StatusUnknown
+			if app.SkipCheck {
+				initialStatus = StatusSkipped
+			}
 			result = append(result, AppStatus{
 				ID:       i + 1,
 				Name:     app.Name,
 				URL:      app.URL,
 				Category: app.Category,
 				Icon:     app.Icon,
-				Status:   StatusUnknown,
+				Status:   initialStatus,
 				Ping:     "--",
 			})
 		}
@@ -149,16 +155,22 @@ func (c *Checker) checkApp(idx int, app manifest.App) {
 	var status Status
 	var ping string
 
-	start := time.Now()
-
-	if app.CheckType == "tcp" {
-		status, ping = c.checkTCP(app.URL)
+	// Skip health check if configured
+	if app.SkipCheck {
+		status = StatusSkipped
+		ping = "--"
 	} else {
-		status, ping = c.checkHTTP(app.URL, app.CheckPath)
-	}
+		start := time.Now()
 
-	if ping == "" {
-		ping = fmt.Sprintf("%dms", time.Since(start).Milliseconds())
+		if app.CheckType == "tcp" {
+			status, ping = c.checkTCP(app.URL)
+		} else {
+			status, ping = c.checkHTTP(app.URL, app.CheckPath)
+		}
+
+		if ping == "" {
+			ping = fmt.Sprintf("%dms", time.Since(start).Milliseconds())
+		}
 	}
 
 	c.mu.Lock()

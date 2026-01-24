@@ -17,6 +17,7 @@ type App struct {
 	Icon      string `yaml:"icon" json:"icon"`
 	CheckPath string `yaml:"check_path,omitempty" json:"checkPath,omitempty"`
 	CheckType string `yaml:"check_type,omitempty" json:"checkType,omitempty"` // "http" (default) or "tcp"
+	SkipCheck bool   `yaml:"skip_check,omitempty" json:"skipCheck,omitempty"` // skip health checks (e.g. for NAS that may wake up)
 }
 
 // Manifest represents the apps.yaml file structure

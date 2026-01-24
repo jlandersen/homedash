@@ -12,6 +12,9 @@
 #   icon:        (optional) Icon name from the list below (default: "box")
 #   check_path:  (optional) Custom path for HTTP health checks (default: "/")
 #   check_type:  (optional) "http" or "tcp" - type of health check (default: "http")
+#   skip_check:  (optional) true/false - skip health checks entirely (default: false)
+#                           Useful for devices that may wake up (e.g. NAS) or services
+#                           you don't want to monitor
 #
 # Available Icons:
 # ----------------
@@ -188,6 +191,13 @@ apps:
     category: System
     icon: chart
     # Real-time system monitoring
+
+  - name: Synology NAS
+    url: http://192.168.1.200:5000
+    category: System
+    icon: database
+    skip_check: true
+    # NAS that may be sleeping - skip health checks to avoid waking it up
 
   # ===================
   # DEVELOPMENT
