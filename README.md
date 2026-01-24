@@ -54,6 +54,8 @@ docker run -p 8080:8080 -v $(pwd)/apps.yaml:/apps.yaml:ro -e HOMEDASH_MANIFEST=/
 
 The image uses `scratch` (empty base) and is only ~10MB.
 
+> **Note:** When using Docker with a bind-mounted `apps.yaml`, file change detection may not work reliably due to how Docker handles bind mounts. After editing `apps.yaml`, restart the container to apply changes: `docker compose restart`
+
 ## Configuration
 
 ### Environment Variables
