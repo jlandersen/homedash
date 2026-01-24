@@ -9,22 +9,18 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
-// SystemStats holds current system statistics
 type SystemStats struct {
 	CPU  string `json:"cpu"`
 	RAM  string `json:"ram"`
 	Temp string `json:"temp"`
 }
 
-// Collector gathers system statistics
 type Collector struct{}
 
-// NewCollector creates a new stats collector
 func NewCollector() *Collector {
 	return &Collector{}
 }
 
-// Get returns current system statistics
 func (c *Collector) Get() SystemStats {
 	stats := SystemStats{
 		CPU:  "--",

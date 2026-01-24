@@ -1,6 +1,6 @@
 # HomeDash
 
-A simple, self-hosted application dashboard for self hosted applications. 
+A simple, self-hosted application dashboard for self-hosted applications. 
 Minimal dependencies, single binary, easy configuration via YAML manifest.
 
 ![Screenshot](screen.png)

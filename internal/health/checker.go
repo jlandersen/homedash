@@ -14,7 +14,6 @@ import (
 	"homedash/internal/manifest"
 )
 
-// Status represents the health status of an app
 type Status string
 
 const (
@@ -24,7 +23,6 @@ const (
 	StatusSkipped Status = "SKIPPED"
 )
 
-// AppStatus holds the current status of an app
 type AppStatus struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
@@ -35,7 +33,6 @@ type AppStatus struct {
 	Ping     string `json:"ping"`
 }
 
-// Checker performs health checks on apps
 type Checker struct {
 	manifest      *manifest.Manager
 	statuses      map[string]*AppStatus
@@ -47,7 +44,6 @@ type Checker struct {
 	stopChan      chan struct{}
 }
 
-// NewChecker creates a new health checker
 func NewChecker(m *manifest.Manager, interval, timeout time.Duration) *Checker {
 	return &Checker{
 		manifest:      m,
@@ -60,14 +56,13 @@ func NewChecker(m *manifest.Manager, interval, timeout time.Duration) *Checker {
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse // Don't follow redirects
+				return http.ErrUseLastResponse
 			},
 		},
 		stopChan: make(chan struct{}),
 	}
 }
 
-// Start begins the periodic health checking
 func (c *Checker) Start(onChange func([]AppStatus)) {
 	c.onChange = onChange
 
@@ -88,17 +83,14 @@ func (c *Checker) Start(onChange func([]AppStatus)) {
 	}()
 }
 
-// Stop stops the health checker
 func (c *Checker) Stop() {
 	close(c.stopChan)
 }
 
-// RefreshApps triggers a re-check when manifest changes
 func (c *Checker) RefreshApps() {
 	go c.checkAll()
 }
 
-// GetStatuses returns the current status of all apps
 func (c *Checker) GetStatuses() []AppStatus {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -112,7 +104,6 @@ func (c *Checker) GetStatuses() []AppStatus {
 			status.ID = i + 1
 			result = append(result, *status)
 		} else {
-			// Determine initial status based on skip_check setting
 			initialStatus := StatusUnknown
 			if app.SkipCheck {
 				initialStatus = StatusSkipped
@@ -155,7 +146,6 @@ func (c *Checker) checkApp(idx int, app manifest.App) {
 	var status Status
 	var ping string
 
-	// Skip health check if configured
 	if app.SkipCheck {
 		status = StatusSkipped
 		ping = "--"

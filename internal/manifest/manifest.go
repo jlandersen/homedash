@@ -9,23 +9,20 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// App represents a single application in the manifest
 type App struct {
 	Name      string `yaml:"name" json:"name"`
 	URL       string `yaml:"url" json:"url"`
 	Category  string `yaml:"category" json:"category"`
 	Icon      string `yaml:"icon" json:"icon"`
 	CheckPath string `yaml:"check_path,omitempty" json:"checkPath,omitempty"`
-	CheckType string `yaml:"check_type,omitempty" json:"checkType,omitempty"` // "http" (default) or "tcp"
-	SkipCheck bool   `yaml:"skip_check,omitempty" json:"skipCheck,omitempty"` // skip health checks (e.g. for NAS that may wake up)
+	CheckType string `yaml:"check_type,omitempty" json:"checkType,omitempty"`
+	SkipCheck bool   `yaml:"skip_check,omitempty" json:"skipCheck,omitempty"`
 }
 
-// Manifest represents the apps.yaml file structure
 type Manifest struct {
 	Apps []App `yaml:"apps" json:"apps"`
 }
 
-// Manager handles loading and watching the manifest file
 type Manager struct {
 	path     string
 	manifest *Manifest
@@ -34,7 +31,6 @@ type Manager struct {
 	watcher  *fsnotify.Watcher
 }
 
-// NewManager creates a new manifest manager
 func NewManager(path string) *Manager {
 	return &Manager{
 		path:     path,
@@ -42,7 +38,6 @@ func NewManager(path string) *Manager {
 	}
 }
 
-// Load reads and parses the manifest file
 func (m *Manager) Load() error {
 	data, err := os.ReadFile(m.path)
 	if err != nil {
@@ -54,7 +49,6 @@ func (m *Manager) Load() error {
 		return err
 	}
 
-	// Set defaults
 	for i := range manifest.Apps {
 		if manifest.Apps[i].Icon == "" {
 			manifest.Apps[i].Icon = "box"
@@ -75,7 +69,6 @@ func (m *Manager) Load() error {
 	return nil
 }
 
-// GetApps returns a copy of the current apps list
 func (m *Manager) GetApps() []App {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -85,7 +78,6 @@ func (m *Manager) GetApps() []App {
 	return apps
 }
 
-// Watch starts watching the manifest file for changes
 func (m *Manager) Watch(onChange func(*Manifest)) error {
 	m.onChange = onChange
 
@@ -124,7 +116,6 @@ func (m *Manager) Watch(onChange func(*Manifest)) error {
 	return watcher.Add(m.path)
 }
 
-// Close stops the file watcher
 func (m *Manager) Close() error {
 	if m.watcher != nil {
 		return m.watcher.Close()

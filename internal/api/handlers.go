@@ -13,7 +13,6 @@ import (
 	"homedash/internal/stats"
 )
 
-// UIConfig represents frontend configuration sent to the client
 type UIConfig struct {
 	TimeFormat24h bool `json:"timeFormat24h"`
 	ShowCPU       bool `json:"showCPU"`
@@ -21,7 +20,6 @@ type UIConfig struct {
 	ShowTemp      bool `json:"showTemp"`
 }
 
-// Handler manages HTTP endpoints
 type Handler struct {
 	checker   *health.Checker
 	stats     *stats.Collector
@@ -30,7 +28,6 @@ type Handler struct {
 	clientsMu sync.RWMutex
 }
 
-// NewHandler creates a new API handler
 func NewHandler(checker *health.Checker, statsCollector *stats.Collector, uiConfig UIConfig) *Handler {
 	return &Handler{
 		checker:  checker,
@@ -40,18 +37,13 @@ func NewHandler(checker *health.Checker, statsCollector *stats.Collector, uiConf
 	}
 }
 
-// RegisterRoutes sets up all HTTP routes
 func (h *Handler) RegisterRoutes(mux *http.ServeMux, webFS fs.FS) {
 	mux.HandleFunc("/api/apps", h.handleApps)
 	mux.HandleFunc("/api/config", h.handleConfig)
 	mux.HandleFunc("/api/events", h.handleSSE)
-
-	// Serve static files from embedded filesystem
-	fileServer := http.FileServer(http.FS(webFS))
-	mux.Handle("/", fileServer)
+	mux.Handle("/", http.FileServer(http.FS(webFS)))
 }
 
-// handleApps returns the current app statuses as JSON
 func (h *Handler) handleApps(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -67,7 +59,6 @@ func (h *Handler) handleApps(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleConfig returns UI configuration
 func (h *Handler) handleConfig(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -82,23 +73,18 @@ func (h *Handler) handleConfig(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleSSE handles Server-Sent Events for real-time updates
 func (h *Handler) handleSSE(w http.ResponseWriter, r *http.Request) {
-	// Set SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	// Create a channel for this client
 	clientChan := make(chan []byte, 10)
 
-	// Register client
 	h.clientsMu.Lock()
 	h.clients[clientChan] = true
 	h.clientsMu.Unlock()
 
-	// Cleanup on disconnect
 	defer func() {
 		h.clientsMu.Lock()
 		delete(h.clients, clientChan)
@@ -106,23 +92,19 @@ func (h *Handler) handleSSE(w http.ResponseWriter, r *http.Request) {
 		h.clientsMu.Unlock()
 	}()
 
-	// Get flusher for streaming
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "Streaming not supported", http.StatusInternalServerError)
 		return
 	}
 
-	// Send initial data
 	h.sendConfigToClient(w, flusher)
 	h.sendAppsToClient(w, flusher)
 	h.sendStatsToClient(w, flusher)
 
-	// Start stats ticker
 	statsTicker := time.NewTicker(2 * time.Second)
 	defer statsTicker.Stop()
 
-	// Listen for events
 	for {
 		select {
 		case <-r.Context().Done():
@@ -168,7 +150,6 @@ func (h *Handler) sendStatsToClient(w http.ResponseWriter, flusher http.Flusher)
 	flusher.Flush()
 }
 
-// BroadcastApps sends app updates to all connected SSE clients
 func (h *Handler) BroadcastApps(statuses []health.AppStatus) {
 	data, err := json.Marshal(statuses)
 	if err != nil {
@@ -183,7 +164,6 @@ func (h *Handler) BroadcastApps(statuses []health.AppStatus) {
 		select {
 		case clientChan <- data:
 		default:
-			// Client buffer full, skip
 		}
 	}
 }

@@ -50,43 +50,36 @@ apps:
     category: Media
     icon: film
     check_path: /web
-    # Plex serves its web UI at /web, so we check that path
 
   - name: Jellyfin
     url: http://192.168.1.100:8096
     category: Media
     icon: tv
-    # Default HTTP check to root path
 
   - name: Sonarr
     url: http://192.168.1.100:8989
     category: Media
     icon: download
-    # TV show management and downloading
 
   - name: Radarr
     url: http://192.168.1.100:7878
     category: Media
     icon: film
-    # Movie management and downloading
 
   - name: Lidarr
     url: http://192.168.1.100:8686
     category: Media
     icon: music
-    # Music management and downloading
 
   - name: SABnzbd
     url: http://192.168.1.100:8080
     category: Media
     icon: download
-    # Usenet download client
 
   - name: Transmission
     url: http://192.168.1.100:9091
     category: Media
     icon: download
-    # Torrent client
 
   # ===================
   # SMART HOME
@@ -96,26 +89,22 @@ apps:
     url: http://192.168.1.50:8123
     category: Smart Home
     icon: home
-    # Smart home automation hub
 
   - name: Node-RED
     url: http://192.168.1.50:1880
     category: Smart Home
     icon: workflow
-    # Flow-based automation
 
   - name: Zigbee2MQTT
     url: http://192.168.1.50:8080
     category: Smart Home
     icon: network
-    # Zigbee device management
 
   - name: MQTT Broker
     url: http://192.168.1.50:1883
     category: Smart Home
     icon: network
     check_type: tcp
-    # Mosquitto MQTT - uses TCP check since it's not HTTP
 
   # ===================
   # NETWORK & SECURITY
@@ -126,31 +115,26 @@ apps:
     category: Network
     icon: shield
     check_path: /admin
-    # DNS-based ad blocking
 
   - name: AdGuard Home
     url: http://192.168.1.2:3000
     category: Network
     icon: shield
-    # Alternative DNS ad blocker
 
   - name: Nginx Proxy Manager
     url: http://192.168.1.100:81
     category: Network
     icon: network
-    # Reverse proxy management
 
   - name: WireGuard UI
     url: http://192.168.1.100:5000
     category: Network
     icon: shield
-    # VPN management
 
   - name: Unifi Controller
     url: https://192.168.1.1:8443
     category: Network
     icon: network
-    # Ubiquiti network management
 
   # ===================
   # SYSTEM & MONITORING
@@ -160,37 +144,31 @@ apps:
     url: http://192.168.1.100:9000
     category: System
     icon: server
-    # Docker container management
 
   - name: Proxmox
     url: https://192.168.1.10:8006
     category: System
     icon: server
-    # Virtualization platform
 
   - name: Grafana
     url: http://192.168.1.100:3000
     category: System
     icon: chart
-    # Metrics visualization
 
   - name: Prometheus
     url: http://192.168.1.100:9090
     category: System
     icon: database
-    # Metrics collection
 
   - name: Uptime Kuma
     url: http://192.168.1.100:3001
     category: System
     icon: chart
-    # Uptime monitoring
 
   - name: Netdata
     url: http://192.168.1.100:19999
     category: System
     icon: chart
-    # Real-time system monitoring
 
   - name: Synology NAS
     url: http://192.168.1.200:5000
@@ -207,33 +185,28 @@ apps:
     url: http://192.168.1.100:3000
     category: Development
     icon: git
-    # Self-hosted Git service
 
   - name: Code Server
     url: http://192.168.1.100:8443
     category: Development
     icon: code
-    # VS Code in the browser
 
   - name: Jupyter Lab
     url: http://192.168.1.100:8888
     category: Development
     icon: terminal
-    # Interactive notebooks
 
   - name: PostgreSQL
     url: http://192.168.1.100:5432
     category: Development
     icon: database
     check_type: tcp
-    # Database - uses TCP check
 
   - name: Redis
     url: http://192.168.1.100:6379
     category: Development
     icon: database
     check_type: tcp
-    # Cache/message broker - uses TCP check
 
   # ===================
   # PRODUCTIVITY
@@ -243,19 +216,16 @@ apps:
     url: http://192.168.1.100:8080
     category: Productivity
     icon: box
-    # File sync and collaboration
 
   - name: Paperless-ngx
     url: http://192.168.1.100:8000
     category: Productivity
     icon: box
-    # Document management
 
   - name: Vaultwarden
     url: http://192.168.1.100:8080
     category: Productivity
     icon: shield
-    # Password manager (Bitwarden compatible)
 
   # ===================
   # EXAMPLE: MINIMAL CONFIG
