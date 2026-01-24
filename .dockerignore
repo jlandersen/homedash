@@ -1,0 +1,20 @@
+# Binary
+homedash
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Docs
+README.md
+LICENSE
+
+# Local config
+apps.yaml
+*.pem

@@ -1,0 +1,258 @@
+# HomeDash - Example Application Manifest
+# ========================================
+#
+# This file defines all applications displayed on your dashboard.
+# Edit this file and save - the dashboard will automatically refresh!
+#
+# Each app entry supports the following fields:
+#
+#   name:        (required) Display name for the app
+#   url:         (required) Full URL to the app (used for health checks and linking)
+#   category:    (optional) Group name for organizing apps (default: "Uncategorized")
+#   icon:        (optional) Icon name from the list below (default: "box")
+#   check_path:  (optional) Custom path for HTTP health checks (default: "/")
+#   check_type:  (optional) "http" or "tcp" - type of health check (default: "http")
+#
+# Available Icons:
+# ----------------
+#   film       - Movie/video icon (for Plex, Jellyfin, Radarr, etc.)
+#   tv         - Television icon (for live TV, streaming)
+#   music      - Music note icon (for Spotify, Navidrome, etc.)
+#   download   - Download arrow icon (for Sonarr, SABnzbd, etc.)
+#   home       - House icon (for Home Assistant, smart home)
+#   workflow   - Flow/nodes icon (for Node-RED, n8n, automation)
+#   shield     - Shield icon (for Pi-hole, AdGuard, security)
+#   network    - Network topology icon (for routers, network tools)
+#   server     - Server rack icon (for Portainer, Proxmox, etc.)
+#   database   - Database cylinder icon (for databases, storage)
+#   chart      - Line chart icon (for Grafana, monitoring)
+#   code       - Code brackets icon (for VS Code, development)
+#   git        - Git icon (for Gitea, GitLab, repositories)
+#   terminal   - Terminal icon (for SSH, shell access)
+#   box        - Default box icon (fallback)
+#
+# Health Check Types:
+# -------------------
+#   http  - (default) Sends HTTP GET request, expects 2xx/3xx response
+#   tcp   - Opens TCP connection to host:port, useful for non-HTTP services
+#
+
+apps:
+  # ===================
+  # MEDIA APPLICATIONS
+  # ===================
+  
+  - name: Plex
+    url: http://192.168.1.100:32400
+    category: Media
+    icon: film
+    check_path: /web
+    # Plex serves its web UI at /web, so we check that path
+
+  - name: Jellyfin
+    url: http://192.168.1.100:8096
+    category: Media
+    icon: tv
+    # Default HTTP check to root path
+
+  - name: Sonarr
+    url: http://192.168.1.100:8989
+    category: Media
+    icon: download
+    # TV show management and downloading
+
+  - name: Radarr
+    url: http://192.168.1.100:7878
+    category: Media
+    icon: film
+    # Movie management and downloading
+
+  - name: Lidarr
+    url: http://192.168.1.100:8686
+    category: Media
+    icon: music
+    # Music management and downloading
+
+  - name: SABnzbd
+    url: http://192.168.1.100:8080
+    category: Media
+    icon: download
+    # Usenet download client
+
+  - name: Transmission
+    url: http://192.168.1.100:9091
+    category: Media
+    icon: download
+    # Torrent client
+
+  # ===================
+  # SMART HOME
+  # ===================
+
+  - name: Home Assistant
+    url: http://192.168.1.50:8123
+    category: Smart Home
+    icon: home
+    # Smart home automation hub
+
+  - name: Node-RED
+    url: http://192.168.1.50:1880
+    category: Smart Home
+    icon: workflow
+    # Flow-based automation
+
+  - name: Zigbee2MQTT
+    url: http://192.168.1.50:8080
+    category: Smart Home
+    icon: network
+    # Zigbee device management
+
+  - name: MQTT Broker
+    url: http://192.168.1.50:1883
+    category: Smart Home
+    icon: network
+    check_type: tcp
+    # Mosquitto MQTT - uses TCP check since it's not HTTP
+
+  # ===================
+  # NETWORK & SECURITY
+  # ===================
+
+  - name: Pi-hole
+    url: http://192.168.1.1:80
+    category: Network
+    icon: shield
+    check_path: /admin
+    # DNS-based ad blocking
+
+  - name: AdGuard Home
+    url: http://192.168.1.2:3000
+    category: Network
+    icon: shield
+    # Alternative DNS ad blocker
+
+  - name: Nginx Proxy Manager
+    url: http://192.168.1.100:81
+    category: Network
+    icon: network
+    # Reverse proxy management
+
+  - name: WireGuard UI
+    url: http://192.168.1.100:5000
+    category: Network
+    icon: shield
+    # VPN management
+
+  - name: Unifi Controller
+    url: https://192.168.1.1:8443
+    category: Network
+    icon: network
+    # Ubiquiti network management
+
+  # ===================
+  # SYSTEM & MONITORING
+  # ===================
+
+  - name: Portainer
+    url: http://192.168.1.100:9000
+    category: System
+    icon: server
+    # Docker container management
+
+  - name: Proxmox
+    url: https://192.168.1.10:8006
+    category: System
+    icon: server
+    # Virtualization platform
+
+  - name: Grafana
+    url: http://192.168.1.100:3000
+    category: System
+    icon: chart
+    # Metrics visualization
+
+  - name: Prometheus
+    url: http://192.168.1.100:9090
+    category: System
+    icon: database
+    # Metrics collection
+
+  - name: Uptime Kuma
+    url: http://192.168.1.100:3001
+    category: System
+    icon: chart
+    # Uptime monitoring
+
+  - name: Netdata
+    url: http://192.168.1.100:19999
+    category: System
+    icon: chart
+    # Real-time system monitoring
+
+  # ===================
+  # DEVELOPMENT
+  # ===================
+
+  - name: Gitea
+    url: http://192.168.1.100:3000
+    category: Development
+    icon: git
+    # Self-hosted Git service
+
+  - name: Code Server
+    url: http://192.168.1.100:8443
+    category: Development
+    icon: code
+    # VS Code in the browser
+
+  - name: Jupyter Lab
+    url: http://192.168.1.100:8888
+    category: Development
+    icon: terminal
+    # Interactive notebooks
+
+  - name: PostgreSQL
+    url: http://192.168.1.100:5432
+    category: Development
+    icon: database
+    check_type: tcp
+    # Database - uses TCP check
+
+  - name: Redis
+    url: http://192.168.1.100:6379
+    category: Development
+    icon: database
+    check_type: tcp
+    # Cache/message broker - uses TCP check
+
+  # ===================
+  # PRODUCTIVITY
+  # ===================
+
+  - name: Nextcloud
+    url: http://192.168.1.100:8080
+    category: Productivity
+    icon: box
+    # File sync and collaboration
+
+  - name: Paperless-ngx
+    url: http://192.168.1.100:8000
+    category: Productivity
+    icon: box
+    # Document management
+
+  - name: Vaultwarden
+    url: http://192.168.1.100:8080
+    category: Productivity
+    icon: shield
+    # Password manager (Bitwarden compatible)
+
+  # ===================
+  # EXAMPLE: MINIMAL CONFIG
+  # ===================
+  # Minimum required fields - just name and url:
+  #
+  # - name: My App
+  #   url: http://192.168.1.100:8080
+  #
+  # This will use defaults: category="Uncategorized", icon="box", check_type="http"

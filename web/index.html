@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomeDash</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header with clock and stats -->
+        <header class="header">
+            <div class="time-section">
+                <h1 class="clock" id="clock">00:00</h1>
+                <p class="date" id="date">Loading...</p>
+            </div>
+            <div class="stats-section" id="stats">
+                <div class="stat-card" id="stat-cpu">
+                    <div class="stat-icon cpu-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">CPU</span>
+                        <span class="stat-value"><span id="cpu-value">--</span><span class="stat-unit">%</span></span>
+                    </div>
+                </div>
+                <div class="stat-card" id="stat-ram">
+                    <div class="stat-icon ram-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">RAM</span>
+                        <span class="stat-value"><span id="ram-value">--</span><span class="stat-unit">%</span></span>
+                    </div>
+                </div>
+                <div class="stat-card" id="stat-temp">
+                    <div class="stat-icon temp-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Temp</span>
+                        <span class="stat-value"><span id="temp-value">--</span><span class="stat-unit">°C</span></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search/Action bar -->
+        <div class="action-bar">
+            <button class="search-trigger" id="searchBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <span>Quick launch...</span>
+                <kbd>⌘K</kbd>
+            </button>
+            <button class="theme-toggle" id="themeBtn" title="Toggle theme">
+                <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            </button>
+        </div>
+
+        <!-- App grid by category -->
+        <main class="content" id="appGrid">
+            <div class="loading">Loading apps...</div>
+        </main>
+    </div>
+
+    <!-- Command palette modal -->
+    <div class="modal-overlay" id="commandPalette">
+        <div class="modal">
+            <div class="modal-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" id="searchInput" placeholder="Search apps..." autocomplete="off">
+                <kbd>ESC</kbd>
+            </div>
+            <div class="search-results" id="searchResults">
+                <div class="search-hint">Type to search...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
