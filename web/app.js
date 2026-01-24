@@ -257,8 +257,15 @@ function connectSSE() {
     
     es.addEventListener('apps', (e) => {
         try {
-            apps = JSON.parse(e.data);
-            renderApps(apps);
+            const newApps = JSON.parse(e.data);
+            // Check if structure changed (new/removed apps) or just status update
+            if (appsStructureChanged(apps, newApps)) {
+                apps = newApps;
+                renderApps(apps);
+            } else {
+                apps = newApps;
+                updateAppStatuses(apps);
+            }
         } catch (err) {
             console.error('Failed to parse apps event:', err);
         }
@@ -308,12 +315,50 @@ function renderApps(appList) {
     appGridEl.innerHTML = html || '<div class="loading">No apps configured. Edit apps.yaml to add some!</div>';
 }
 
+// Check if app list structure changed (not just status)
+function appsStructureChanged(oldApps, newApps) {
+    if (oldApps.length !== newApps.length) return true;
+    for (let i = 0; i < oldApps.length; i++) {
+        if (oldApps[i].name !== newApps[i].name ||
+            oldApps[i].url !== newApps[i].url ||
+            oldApps[i].category !== newApps[i].category ||
+            oldApps[i].icon !== newApps[i].icon) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Update only status indicators without re-rendering
+function updateAppStatuses(appList) {
+    appList.forEach(app => {
+        const appId = btoa(app.name + '|' + app.url).replace(/[^a-zA-Z0-9]/g, '');
+        const card = appGridEl.querySelector(`[data-app-id="${appId}"]`);
+        if (!card) return;
+        
+        const statusDot = card.querySelector('.status-dot');
+        const statusText = card.querySelector('.status-text');
+        
+        if (statusDot) {
+            statusDot.className = 'status-dot';
+            if (app.status === 'UP') statusDot.classList.add('up');
+            else if (app.status === 'DOWN') statusDot.classList.add('down');
+            else if (app.status === 'SKIPPED') statusDot.classList.add('skipped');
+        }
+        
+        if (statusText) {
+            statusText.textContent = app.status;
+        }
+    });
+}
+
 function renderAppCard(app) {
     const icon = ICONS[app.icon] || ICONS.box;
     const statusClass = app.status === 'UP' ? 'up' : app.status === 'DOWN' ? 'down' : app.status === 'SKIPPED' ? 'skipped' : '';
+    const appId = btoa(app.name + '|' + app.url).replace(/[^a-zA-Z0-9]/g, '');
     
     return `
-        <a class="app-card" href="${escapeHtml(app.url)}" target="_blank" rel="noopener noreferrer">
+        <a class="app-card" data-app-id="${appId}" href="${escapeHtml(app.url)}" target="_blank" rel="noopener noreferrer">
             <div class="app-card-icon">${icon}</div>
             <div class="app-card-name">${escapeHtml(app.name)}</div>
             <div class="app-card-status">
