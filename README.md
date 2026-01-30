@@ -43,8 +43,45 @@ Open http://localhost:8080 in your browser.
 
 ### Using Docker
 
+#### Pull from GitHub Container Registry (Recommended)
+
+Pre-built multi-arch images (amd64 and arm64) are available:
+
 ```bash
-# Build and run with Docker Compose (recommended)
+# Pull the latest image
+docker pull ghcr.io/jlandersen/homedash:latest
+
+# Run with your apps.yaml
+docker run -p 8080:8080 \
+  -v $(pwd)/apps.yaml:/apps.yaml:ro \
+  -e HOMEDASH_MANIFEST=/apps.yaml \
+  ghcr.io/jlandersen/homedash:latest
+```
+
+#### Using Docker Compose
+
+```yaml
+services:
+  homedash:
+    image: ghcr.io/jlandersen/homedash:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./apps.yaml:/apps.yaml:ro
+    environment:
+      - HOMEDASH_MANIFEST=/apps.yaml
+    restart: unless-stopped
+```
+
+Then run:
+```bash
+docker compose up -d
+```
+
+#### Build Locally
+
+```bash
+# Build and run with Docker Compose
 docker compose up -d
 
 # Or build manually
