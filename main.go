@@ -26,17 +26,10 @@ func main() {
 
 	log.Printf("HomeDash starting...")
 	log.Printf("  Port: %d", cfg.Port)
-	log.Printf("  Manifest: %s", cfg.ManifestPath)
 	log.Printf("  Check interval: %s", cfg.CheckInterval)
 	log.Printf("  Agent mode: %v", cfg.AgentMode)
 
-	manifestMgr := manifest.NewManager(cfg.ManifestPath)
-	if err := manifestMgr.Load(); err != nil {
-		log.Fatalf("Failed to load manifest: %v", err)
-	}
-
-	statsCollector := stats.NewCollector()
-
+	var manifestMgr *manifest.Manager
 	var agentStatsCollector *agentstats.Collector
 	var checker *health.Checker
 
@@ -44,11 +37,20 @@ func main() {
 		// In agent mode, we only expose stats endpoint
 		log.Printf("Running in agent mode - only exposing /api/stats endpoint")
 	} else {
+		// In dashboard mode, we need manifest for apps and agents
+		log.Printf("  Manifest: %s", cfg.ManifestPath)
+		manifestMgr = manifest.NewManager(cfg.ManifestPath)
+		if err := manifestMgr.Load(); err != nil {
+			log.Fatalf("Failed to load manifest: %v", err)
+		}
+
 		// In dashboard mode, we do health checks and poll agents
 		checker = health.NewChecker(manifestMgr, cfg.CheckInterval, cfg.CheckTimeout)
 		agentStatsCollector = agentstats.NewCollector(manifestMgr, cfg.CheckInterval)
 		agentStatsCollector.Start()
 	}
+
+	statsCollector := stats.NewCollector()
 
 	uiConfig := api.UIConfig{
 		TimeFormat24h: cfg.TimeFormat24h,
@@ -103,7 +105,9 @@ func main() {
 		if agentStatsCollector != nil {
 			agentStatsCollector.Stop()
 		}
-		manifestMgr.Close()
+		if manifestMgr != nil {
+			manifestMgr.Close()
+		}
 		server.Close()
 	}()
 

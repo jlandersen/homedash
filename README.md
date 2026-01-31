@@ -47,7 +47,7 @@ Open http://localhost:8080 in your browser.
 
 #### Pull from GitHub Container Registry (Recommended)
 
-Pre-built multi-arch images (amd64 and arm64) are available:
+Pre-built multi-arch images (amd64, arm64/v8, arm/v7) are available:
 
 ```bash
 # Pull the latest image
@@ -303,6 +303,7 @@ docker run -d \
 Agent mode:
 - No UI served (only `/api/stats` endpoint)
 - No health checks performed
+- No manifest file required
 - Minimal resource usage (~5-10MB RAM)
 - Returns: `{"cpu":"45","ram":"67","temp":"52"}`
 
