@@ -401,7 +401,7 @@ function renderAgentStats(agents) {
     
     agentStatsEl.style.display = 'block';
     
-    let html = '<div class="agent-stats-header"><h3>Monitored Agents</h3></div><div class="agent-stats-grid">';
+    let html = '<div class="agent-stats-grid">';
     
     agents.forEach(agent => {
         const hasError = agent.error && agent.error !== '';

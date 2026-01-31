@@ -692,43 +692,38 @@ body.light .sun-icon {
     background: var(--text-muted);
 }
 
-/* Agent Stats Section */
-.agent-stats-section {
+/* Agent Stats - Compact version below host stats */
+.agent-stats-compact {
     max-width: 1400px;
-    margin: 0 auto 2rem;
+    margin: -1rem auto 1.5rem;
     padding: 0 2rem;
 }
 
-.agent-stats-header {
-    margin-bottom: 1rem;
-}
-
-.agent-stats-header h3 {
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary);
-}
-
 .agent-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
 }
 
 .agent-stat-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1rem;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
     backdrop-filter: blur(10px);
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 200px;
+    max-width: 280px;
 }
 
 .agent-stat-card:hover {
     background: var(--bg-card-hover);
     border-color: var(--border-hover);
+    transform: translateY(-1px);
 }
 
 .agent-stat-card.error {
@@ -737,51 +732,76 @@ body.light .sun-icon {
 }
 
 .agent-name {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    min-width: 80px;
+    flex-shrink: 0;
 }
 
 .agent-error {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--status-down);
-    padding: 0.5rem;
-    background: rgba(248, 113, 113, 0.1);
-    border-radius: 6px;
+    flex: 1;
 }
 
 .agent-stats-values {
     display: flex;
-    gap: 1rem;
-    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: center;
 }
 
 .agent-stat-item {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    align-items: center;
+    gap: 0.125rem;
 }
 
 .agent-stat-label {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-secondary);
 }
 
 .agent-stat-value {
-    font-size: 1.125rem;
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-primary);
 }
 
 .agent-stat-value .stat-unit {
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     color: var(--text-secondary);
     margin-left: 0.125rem;
 }
+
+/* Responsive adjustments for agent stats */
+@media (max-width: 768px) {
+    .agent-stats-compact {
+        padding: 0 1rem;
+        margin: -0.5rem auto 1rem;
+    }
+    
+    .agent-stat-card {
+        min-width: 160px;
+        padding: 0.4rem 0.6rem;
+        gap: 0.5rem;
+    }
+    
+    .agent-name {
+        font-size: 0.7rem;
+        min-width: 60px;
+    }
+    
+    .agent-stats-values {
+        gap: 0.5rem;
+    }
+    
+    .agent-stat-value {
+        font-size: 0.8rem;
+    }
+}
+
 
