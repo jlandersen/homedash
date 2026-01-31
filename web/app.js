@@ -32,6 +32,7 @@ const ICONS = {
 // State
 let apps = [];
 let stats = { cpu: '--', ram: '--', temp: '--' };
+let agentStats = [];
 let config = { timeFormat24h: false, showCPU: true, showRAM: true, showTemp: true };
 let selectedIndex = -1;
 let filteredResults = [];
@@ -280,6 +281,15 @@ function connectSSE() {
         }
     });
     
+    es.addEventListener('agentstats', (e) => {
+        try {
+            agentStats = JSON.parse(e.data);
+            renderAgentStats(agentStats);
+        } catch (err) {
+            console.error('Failed to parse agentstats event:', err);
+        }
+    });
+    
     es.onerror = () => {
         console.log('SSE connection lost, reconnecting...');
     };
@@ -379,6 +389,50 @@ function applyStatsVisibility() {
     document.getElementById('stat-cpu').style.display = config.showCPU ? '' : 'none';
     document.getElementById('stat-ram').style.display = config.showRAM ? '' : 'none';
     document.getElementById('stat-temp').style.display = config.showTemp ? '' : 'none';
+}
+
+function renderAgentStats(agents) {
+    const agentStatsEl = document.getElementById('agentStats');
+    
+    if (!agents || agents.length === 0) {
+        agentStatsEl.style.display = 'none';
+        return;
+    }
+    
+    agentStatsEl.style.display = 'block';
+    
+    let html = '<div class="agent-stats-header"><h3>Monitored Agents</h3></div><div class="agent-stats-grid">';
+    
+    agents.forEach(agent => {
+        const hasError = agent.error && agent.error !== '';
+        const statusClass = hasError ? 'error' : 'ok';
+        
+        html += `
+            <div class="agent-stat-card ${statusClass}">
+                <div class="agent-name">${escapeHtml(agent.name)}</div>
+                ${hasError ? 
+                    `<div class="agent-error">${escapeHtml(agent.error)}</div>` :
+                    `<div class="agent-stats-values">
+                        <div class="agent-stat-item">
+                            <span class="agent-stat-label">CPU</span>
+                            <span class="agent-stat-value">${agent.stats.cpu}<span class="stat-unit">%</span></span>
+                        </div>
+                        <div class="agent-stat-item">
+                            <span class="agent-stat-label">RAM</span>
+                            <span class="agent-stat-value">${agent.stats.ram}<span class="stat-unit">%</span></span>
+                        </div>
+                        <div class="agent-stat-item">
+                            <span class="agent-stat-label">Temp</span>
+                            <span class="agent-stat-value">${agent.stats.temp}<span class="stat-unit">°C</span></span>
+                        </div>
+                    </div>`
+                }
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    agentStatsEl.innerHTML = html;
 }
 
 function escapeHtml(text) {

@@ -19,8 +19,14 @@ type App struct {
 	SkipCheck bool   `yaml:"skip_check,omitempty" json:"skipCheck,omitempty"`
 }
 
+type Agent struct {
+	Name string `yaml:"name" json:"name"`
+	URL  string `yaml:"url" json:"url"`
+}
+
 type Manifest struct {
-	Apps []App `yaml:"apps" json:"apps"`
+	Apps   []App   `yaml:"apps" json:"apps"`
+	Agents []Agent `yaml:"agents,omitempty" json:"agents,omitempty"`
 }
 
 type Manager struct {
@@ -76,6 +82,15 @@ func (m *Manager) GetApps() []App {
 	apps := make([]App, len(m.manifest.Apps))
 	copy(apps, m.manifest.Apps)
 	return apps
+}
+
+func (m *Manager) GetAgents() []Agent {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	agents := make([]Agent, len(m.manifest.Agents))
+	copy(agents, m.manifest.Agents)
+	return agents
 }
 
 func (m *Manager) Watch(onChange func(*Manifest)) error {

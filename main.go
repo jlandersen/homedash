@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"homedash/internal/agentstats"
 	"homedash/internal/api"
 	"homedash/internal/config"
 	"homedash/internal/health"
@@ -27,6 +28,7 @@ func main() {
 	log.Printf("  Port: %d", cfg.Port)
 	log.Printf("  Manifest: %s", cfg.ManifestPath)
 	log.Printf("  Check interval: %s", cfg.CheckInterval)
+	log.Printf("  Agent mode: %v", cfg.AgentMode)
 
 	manifestMgr := manifest.NewManager(cfg.ManifestPath)
 	if err := manifestMgr.Load(); err != nil {
@@ -34,7 +36,19 @@ func main() {
 	}
 
 	statsCollector := stats.NewCollector()
-	checker := health.NewChecker(manifestMgr, cfg.CheckInterval, cfg.CheckTimeout)
+
+	var agentStatsCollector *agentstats.Collector
+	var checker *health.Checker
+
+	if cfg.AgentMode {
+		// In agent mode, we only expose stats endpoint
+		log.Printf("Running in agent mode - only exposing /api/stats endpoint")
+	} else {
+		// In dashboard mode, we do health checks and poll agents
+		checker = health.NewChecker(manifestMgr, cfg.CheckInterval, cfg.CheckTimeout)
+		agentStatsCollector = agentstats.NewCollector(manifestMgr, cfg.CheckInterval)
+		agentStatsCollector.Start()
+	}
 
 	uiConfig := api.UIConfig{
 		TimeFormat24h: cfg.TimeFormat24h,
@@ -42,17 +56,25 @@ func main() {
 		ShowRAM:       cfg.ShowRAM,
 		ShowTemp:      cfg.ShowTemp,
 	}
-	handler := api.NewHandler(checker, statsCollector, uiConfig)
+	handler := api.NewHandler(checker, statsCollector, agentStatsCollector, uiConfig)
 
-	checker.Start(func(statuses []health.AppStatus) {
-		handler.BroadcastApps(statuses)
-	})
+	if !cfg.AgentMode {
+		checker.Start(func(statuses []health.AppStatus) {
+			handler.BroadcastApps(statuses)
+		})
 
-	if err := manifestMgr.Watch(func(m *manifest.Manifest) {
-		log.Printf("Manifest updated, refreshing checks...")
-		checker.RefreshApps()
-	}); err != nil {
-		log.Printf("Warning: Could not watch manifest file: %v", err)
+		if err := manifestMgr.Watch(func(m *manifest.Manifest) {
+			log.Printf("Manifest updated, refreshing checks...")
+			checker.RefreshApps()
+			// Restart agent stats collector to pick up new agents
+			if agentStatsCollector != nil {
+				agentStatsCollector.Stop()
+				agentStatsCollector = agentstats.NewCollector(manifestMgr, cfg.CheckInterval)
+				agentStatsCollector.Start()
+			}
+		}); err != nil {
+			log.Printf("Warning: Could not watch manifest file: %v", err)
+		}
 	}
 
 	mux := http.NewServeMux()
@@ -75,7 +97,12 @@ func main() {
 		<-sigChan
 
 		log.Println("Shutting down...")
-		checker.Stop()
+		if checker != nil {
+			checker.Stop()
+		}
+		if agentStatsCollector != nil {
+			agentStatsCollector.Stop()
+		}
 		manifestMgr.Close()
 		server.Close()
 	}()

@@ -14,6 +14,8 @@ Minimal dependencies, single binary, easy configuration via YAML manifest.
 - **YAML manifest** - Define your apps in a simple `apps.yaml` file
 - **Auto-refresh** - Dashboard updates automatically when manifest changes
 - **Health monitoring** - HTTP and TCP health checks with configurable intervals
+- **Agent mode** - Monitor system stats from multiple servers
+- **System stats** - CPU, RAM, and temperature monitoring
 - **Dark/Light theme** - Toggle with localStorage persistence
 - **Command palette** - Quick launch apps with `Cmd/Ctrl+K`
 - **Responsive** - Works on desktop and mobile
@@ -107,6 +109,7 @@ The image uses `scratch` (empty base) and is only ~10MB.
 | `HOMEDASH_SHOW_CPU` | `true` | Show CPU usage stat |
 | `HOMEDASH_SHOW_RAM` | `true` | Show RAM usage stat |
 | `HOMEDASH_SHOW_TEMP` | `true` | Show temperature stat |
+| `HOMEDASH_AGENT_MODE` | `false` | Run in agent mode (stats endpoint only) |
 | `HOMEDASH_TLS_CERT` | - | Path to TLS certificate file |
 | `HOMEDASH_TLS_KEY` | - | Path to TLS private key file |
 | `HOMEDASH_TLS_REDIRECT` | - | Port for HTTP->HTTPS redirect |
@@ -158,6 +161,13 @@ apps:
     url: http://192.168.1.50:8123
     category: Smart Home
     icon: home
+
+# Optional: Monitor system stats from remote servers
+agents:
+  - name: Git Host
+    url: http://192.168.1.100:8081
+  - name: Docker Host
+    url: http://192.168.1.200:8081
 ```
 
 #### App Fields
@@ -170,6 +180,18 @@ apps:
 | `icon` | No | `box` | Icon name (see below) |
 | `check_path` | No | `/` | Path for HTTP health checks |
 | `check_type` | No | `http` | `http` or `tcp` |
+| `skip_check` | No | `false` | Skip health checks entirely |
+
+#### Agent Fields
+
+For monitoring system stats from multiple servers, add an `agents` section:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | Yes | Display name for the agent |
+| `url` | Yes | Full URL to the agent (e.g., `http://192.168.1.100:8081`) |
+
+Agents must be running HomeDash in agent mode. See [Agent Mode](#agent-mode) below.
 
 ### Available Icons
 
@@ -220,6 +242,8 @@ Opens a TCP connection to the host and port. Useful for non-HTTP services like d
 |----------|--------|-------------|
 | `/` | GET | Serves the dashboard UI |
 | `/api/apps` | GET | Returns JSON array of apps with status |
+| `/api/config` | GET | Returns UI configuration |
+| `/api/stats` | GET | Returns system stats (CPU, RAM, Temp) |
 | `/api/events` | GET | SSE stream for real-time updates |
 
 ### Example Response
@@ -240,10 +264,87 @@ Opens a TCP connection to the host and port. Useful for non-HTTP services like d
 
 ### SSE Events
 
-The `/api/events` endpoint streams two event types:
+The `/api/events` endpoint streams three event types:
 
+- `config` - Sent once on connect with UI configuration
 - `apps` - Sent when health check completes or manifest changes
 - `stats` - Sent every 2 seconds with system statistics
+- `agentstats` - Sent every 2 seconds with stats from monitored agents
+
+## Agent Mode
+
+Agent mode allows you to monitor system stats (CPU, RAM, Temperature) from multiple servers in a single dashboard.
+
+### How It Works
+
+1. **Main Dashboard Server**: Runs HomeDash normally with full UI
+2. **Agent Servers**: Run HomeDash in agent mode (lightweight, stats-only)
+3. **Configuration**: Add agents to your `apps.yaml`
+4. **Aggregation**: Main dashboard polls agents and displays their stats
+
+### Setting Up Agents
+
+#### On Remote Servers (Agents)
+
+Run HomeDash in agent mode:
+
+```bash
+# Binary
+HOMEDASH_AGENT_MODE=true HOMEDASH_PORT=8081 ./homedash
+
+# Docker
+docker run -d \
+  -p 8081:8081 \
+  -e HOMEDASH_AGENT_MODE=true \
+  -e HOMEDASH_PORT=8081 \
+  ghcr.io/jlandersen/homedash:latest
+```
+
+Agent mode:
+- No UI served (only `/api/stats` endpoint)
+- No health checks performed
+- Minimal resource usage (~5-10MB RAM)
+- Returns: `{"cpu":"45","ram":"67","temp":"52"}`
+
+#### On Main Dashboard Server
+
+Add agents to your `apps.yaml`:
+
+```yaml
+apps:
+  # Your regular apps...
+  - name: Plex
+    url: http://192.168.1.100:32400
+    category: Media
+    icon: film
+
+# Monitor stats from remote servers
+agents:
+  - name: Git Host
+    url: http://192.168.1.100:8081
+  - name: Docker Host
+    url: http://192.168.1.200:8081
+  - name: NAS
+    url: http://192.168.1.50:8081
+```
+
+The dashboard will:
+- Poll each agent every 30 seconds
+- Display stats in "Monitored Agents" section
+- Show errors if agent is unreachable
+
+### Docker Compose Example
+
+See [docker-compose.agent.example.yml](docker-compose.agent.example.yml) for a complete multi-server setup example.
+
+### Verifying Agent Setup
+
+Test an agent endpoint:
+
+```bash
+curl http://192.168.1.100:8081/api/stats
+# Expected output: {"cpu":"45","ram":"67","temp":"52"}
+```
 
 ## Project Structure
 
@@ -258,6 +359,7 @@ homedash/
 │   ├── manifest/manifest.go     # YAML parsing + file watcher
 │   ├── health/checker.go        # HTTP/TCP health checks
 │   ├── stats/stats.go           # System stats (CPU/RAM/Temp)
+│   ├── agentstats/agentstats.go # Remote agent stats collector
 │   └── api/handlers.go          # HTTP handlers + SSE
 └── web/
     ├── index.html               # Dashboard HTML

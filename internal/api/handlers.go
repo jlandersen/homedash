@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"homedash/internal/agentstats"
 	"homedash/internal/health"
 	"homedash/internal/stats"
 )
@@ -21,19 +22,21 @@ type UIConfig struct {
 }
 
 type Handler struct {
-	checker   *health.Checker
-	stats     *stats.Collector
-	uiConfig  UIConfig
-	clients   map[chan []byte]bool
-	clientsMu sync.RWMutex
+	checker    *health.Checker
+	stats      *stats.Collector
+	agentStats *agentstats.Collector
+	uiConfig   UIConfig
+	clients    map[chan []byte]bool
+	clientsMu  sync.RWMutex
 }
 
-func NewHandler(checker *health.Checker, statsCollector *stats.Collector, uiConfig UIConfig) *Handler {
+func NewHandler(checker *health.Checker, statsCollector *stats.Collector, agentStatsCollector *agentstats.Collector, uiConfig UIConfig) *Handler {
 	return &Handler{
-		checker:  checker,
-		stats:    statsCollector,
-		uiConfig: uiConfig,
-		clients:  make(map[chan []byte]bool),
+		checker:    checker,
+		stats:      statsCollector,
+		agentStats: agentStatsCollector,
+		uiConfig:   uiConfig,
+		clients:    make(map[chan []byte]bool),
 	}
 }
 
@@ -41,6 +44,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux, webFS fs.FS) {
 	mux.HandleFunc("/api/apps", h.handleApps)
 	mux.HandleFunc("/api/config", h.handleConfig)
 	mux.HandleFunc("/api/events", h.handleSSE)
+	mux.HandleFunc("/api/stats", h.handleStats)
 	mux.Handle("/", http.FileServer(http.FS(webFS)))
 }
 
@@ -73,6 +77,21 @@ func (h *Handler) handleConfig(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handler) handleStats(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	sysStats := h.stats.Get()
+	if err := json.NewEncoder(w).Encode(sysStats); err != nil {
+		log.Printf("Error encoding stats response: %v", err)
+	}
+}
+
 func (h *Handler) handleSSE(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -101,6 +120,7 @@ func (h *Handler) handleSSE(w http.ResponseWriter, r *http.Request) {
 	h.sendConfigToClient(w, flusher)
 	h.sendAppsToClient(w, flusher)
 	h.sendStatsToClient(w, flusher)
+	h.sendAgentStatsToClient(w, flusher)
 
 	statsTicker := time.NewTicker(2 * time.Second)
 	defer statsTicker.Stop()
@@ -114,6 +134,7 @@ func (h *Handler) handleSSE(w http.ResponseWriter, r *http.Request) {
 			flusher.Flush()
 		case <-statsTicker.C:
 			h.sendStatsToClient(w, flusher)
+			h.sendAgentStatsToClient(w, flusher)
 		}
 	}
 }
@@ -147,6 +168,20 @@ func (h *Handler) sendStatsToClient(w http.ResponseWriter, flusher http.Flusher)
 		return
 	}
 	fmt.Fprintf(w, "event: stats\ndata: %s\n\n", data)
+	flusher.Flush()
+}
+
+func (h *Handler) sendAgentStatsToClient(w http.ResponseWriter, flusher http.Flusher) {
+	if h.agentStats == nil {
+		return
+	}
+	agentStats := h.agentStats.Get()
+	data, err := json.Marshal(agentStats)
+	if err != nil {
+		log.Printf("Error marshaling agent stats: %v", err)
+		return
+	}
+	fmt.Fprintf(w, "event: agentstats\ndata: %s\n\n", data)
 	flusher.Flush()
 }
 

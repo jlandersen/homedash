@@ -16,6 +16,22 @@
 #                           Useful for devices that may wake up (e.g. NAS) or services
 #                           you don't want to monitor
 #
+# Agent Configuration:
+# -------------------
+# You can configure remote agents to monitor system stats (CPU, RAM, Temp) from
+# multiple servers. Each agent should be running HomeDash in agent mode.
+#
+# To run HomeDash in agent mode on a remote server:
+#   HOMEDASH_AGENT_MODE=true ./homedash
+#
+# Then add the agent to this config:
+#
+# agents:
+#   - name: Server 1
+#     url: http://192.168.1.10:8080
+#   - name: Server 2
+#     url: http://192.168.1.20:8080
+#
 # Available Icons:
 # ----------------
 #   film       - Movie/video icon (for Plex, Jellyfin, Radarr, etc.)
@@ -236,3 +252,15 @@ apps:
   #   url: http://192.168.1.100:8080
   #
   # This will use defaults: category="Uncategorized", icon="box", check_type="http"
+
+# ===================
+# AGENTS (OPTIONAL)
+# ===================
+# Monitor system stats from multiple servers running HomeDash in agent mode
+#
+# agents:
+#   - name: Git Host
+#     url: http://192.168.1.100:8080
+#   - name: Docker Host
+#     url: http://192.168.1.200:8080
+
