@@ -76,7 +76,7 @@ func (c *Collector) collect() {
 				newStats[idx] = AgentStats{
 					Name:  ag.Name,
 					Error: err.Error(),
-					Stats: stats.SystemStats{CPU: "--", RAM: "--", Temp: "--"},
+					Stats: stats.SystemStats{CPU: nil, RAM: nil, Temp: nil, NetTX: nil, NetRX: nil},
 				}
 				return
 			}
@@ -86,7 +86,7 @@ func (c *Collector) collect() {
 				newStats[idx] = AgentStats{
 					Name:  ag.Name,
 					Error: fmt.Sprintf("HTTP %d", resp.StatusCode),
-					Stats: stats.SystemStats{CPU: "--", RAM: "--", Temp: "--"},
+					Stats: stats.SystemStats{CPU: nil, RAM: nil, Temp: nil, NetTX: nil, NetRX: nil},
 				}
 				return
 			}
@@ -96,7 +96,7 @@ func (c *Collector) collect() {
 				newStats[idx] = AgentStats{
 					Name:  ag.Name,
 					Error: err.Error(),
-					Stats: stats.SystemStats{CPU: "--", RAM: "--", Temp: "--"},
+					Stats: stats.SystemStats{CPU: nil, RAM: nil, Temp: nil, NetTX: nil, NetRX: nil},
 				}
 				return
 			}

@@ -19,6 +19,8 @@ type UIConfig struct {
 	ShowCPU       bool `json:"showCPU"`
 	ShowRAM       bool `json:"showRAM"`
 	ShowTemp      bool `json:"showTemp"`
+	ShowNetTX     bool `json:"showNetTX"`
+	ShowNetRX     bool `json:"showNetRX"`
 }
 
 type Handler struct {

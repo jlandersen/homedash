@@ -57,6 +57,8 @@ func main() {
 		ShowCPU:       cfg.ShowCPU,
 		ShowRAM:       cfg.ShowRAM,
 		ShowTemp:      cfg.ShowTemp,
+		ShowNetTX:     cfg.ShowNetTX,
+		ShowNetRX:     cfg.ShowNetRX,
 	}
 	handler := api.NewHandler(checker, statsCollector, agentStatsCollector, uiConfig)
 

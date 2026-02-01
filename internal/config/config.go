@@ -21,6 +21,8 @@ type Config struct {
 	ShowCPU       bool
 	ShowRAM       bool
 	ShowTemp      bool
+	ShowNetTX     bool
+	ShowNetRX     bool
 
 	// Agent mode - exposes stats endpoint only, no UI
 	AgentMode bool
@@ -44,6 +46,8 @@ func Load() *Config {
 		ShowCPU:       getEnvBool("HOMEDASH_SHOW_CPU", true),
 		ShowRAM:       getEnvBool("HOMEDASH_SHOW_RAM", true),
 		ShowTemp:      getEnvBool("HOMEDASH_SHOW_TEMP", true),
+		ShowNetTX:     getEnvBool("HOMEDASH_SHOW_NET_TX", true),
+		ShowNetRX:     getEnvBool("HOMEDASH_SHOW_NET_RX", true),
 
 		// Agent mode
 		AgentMode: getEnvBool("HOMEDASH_AGENT_MODE", false),

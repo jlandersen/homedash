@@ -31,9 +31,9 @@ const ICONS = {
 
 // State
 let apps = [];
-let stats = { cpu: '--', ram: '--', temp: '--' };
+let stats = { cpu: null, ram: null, temp: null, netTx: null, netRx: null };
 let agentStats = [];
-let config = { timeFormat24h: false, showCPU: true, showRAM: true, showTemp: true };
+let config = { timeFormat24h: false, showCPU: true, showRAM: true, showTemp: true, showNetTX: true, showNetRX: true };
 let selectedIndex = -1;
 let filteredResults = [];
 
@@ -380,15 +380,49 @@ function renderAppCard(app) {
 }
 
 function renderStats(s) {
-    if (config.showCPU) document.getElementById('cpu-value').textContent = s.cpu;
-    if (config.showRAM) document.getElementById('ram-value').textContent = s.ram;
-    if (config.showTemp) document.getElementById('temp-value').textContent = s.temp;
+    if (config.showCPU) {
+        document.getElementById('cpu-value').textContent = s.cpu !== null ? s.cpu.toFixed(0) : '--';
+    }
+    if (config.showRAM) {
+        document.getElementById('ram-value').textContent = s.ram !== null ? s.ram.toFixed(0) : '--';
+    }
+    if (config.showTemp) {
+        document.getElementById('temp-value').textContent = s.temp !== null ? s.temp.toFixed(0) : '--';
+    }
+    if (config.showNetTX) {
+        if (s.netTx === null) {
+            document.getElementById('net-tx-value').textContent = '--';
+            document.getElementById('stat-net-tx').querySelector('.stat-unit').textContent = 'KB/s';
+        } else if (s.netTx >= 1024) {
+            const mbps = s.netTx / 1024;
+            document.getElementById('net-tx-value').textContent = mbps.toFixed(1);
+            document.getElementById('stat-net-tx').querySelector('.stat-unit').textContent = 'MB/s';
+        } else {
+            document.getElementById('net-tx-value').textContent = s.netTx.toFixed(1);
+            document.getElementById('stat-net-tx').querySelector('.stat-unit').textContent = 'KB/s';
+        }
+    }
+    if (config.showNetRX) {
+        if (s.netRx === null) {
+            document.getElementById('net-rx-value').textContent = '--';
+            document.getElementById('stat-net-rx').querySelector('.stat-unit').textContent = 'KB/s';
+        } else if (s.netRx >= 1024) {
+            const mbps = s.netRx / 1024;
+            document.getElementById('net-rx-value').textContent = mbps.toFixed(1);
+            document.getElementById('stat-net-rx').querySelector('.stat-unit').textContent = 'MB/s';
+        } else {
+            document.getElementById('net-rx-value').textContent = s.netRx.toFixed(1);
+            document.getElementById('stat-net-rx').querySelector('.stat-unit').textContent = 'KB/s';
+        }
+    }
 }
 
 function applyStatsVisibility() {
     document.getElementById('stat-cpu').style.display = config.showCPU ? '' : 'none';
     document.getElementById('stat-ram').style.display = config.showRAM ? '' : 'none';
     document.getElementById('stat-temp').style.display = config.showTemp ? '' : 'none';
+    document.getElementById('stat-net-tx').style.display = config.showNetTX ? '' : 'none';
+    document.getElementById('stat-net-rx').style.display = config.showNetRX ? '' : 'none';
 }
 
 function renderAgentStats(agents) {

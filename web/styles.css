@@ -31,6 +31,8 @@
     --cpu-color: #34d399;
     --ram-color: #38bdf8;
     --temp-color: #fbbf24;
+    --net-tx-color: #f472b6;
+    --net-rx-color: #a78bfa;
     
     /* Blob colors (dark) */
     --blob-1: rgba(99, 102, 241, 0.15);
@@ -219,10 +221,13 @@ body {
 .stat-icon.cpu-icon { color: var(--cpu-color); }
 .stat-icon.ram-icon { color: var(--ram-color); }
 .stat-icon.temp-icon { color: var(--temp-color); }
+.stat-icon.net-tx-icon { color: var(--net-tx-color); }
+.stat-icon.net-rx-icon { color: var(--net-rx-color); }
 
 .stat-info {
     display: flex;
     flex-direction: column;
+    min-width: 90px;
 }
 
 .stat-label {
@@ -237,12 +242,22 @@ body {
     font-size: 0.9rem;
     font-weight: 600;
     font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.stat-value > span:first-child {
+    display: inline-block;
+    min-width: 3ch;
+    text-align: right;
 }
 
 .stat-unit {
     font-size: 0.7rem;
     color: var(--text-muted);
-    margin-left: 1px;
+    margin-left: 2px;
+    display: inline-block;
+    min-width: 4ch;
 }
 
 /* Action bar */
