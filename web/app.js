@@ -441,6 +441,11 @@ function renderAgentStats(agents) {
         const hasError = agent.error && agent.error !== '';
         const statusClass = hasError ? 'error' : 'ok';
         
+        // Format stat values with null handling
+        const cpuValue = agent.stats.cpu !== null && agent.stats.cpu !== undefined ? agent.stats.cpu.toFixed(0) : '--';
+        const ramValue = agent.stats.ram !== null && agent.stats.ram !== undefined ? agent.stats.ram.toFixed(0) : '--';
+        const tempValue = agent.stats.temp !== null && agent.stats.temp !== undefined ? agent.stats.temp.toFixed(0) : '--';
+        
         html += `
             <div class="agent-stat-card ${statusClass}">
                 <div class="agent-name">${escapeHtml(agent.name)}</div>
@@ -449,15 +454,15 @@ function renderAgentStats(agents) {
                     `<div class="agent-stats-values">
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">CPU</span>
-                            <span class="agent-stat-value">${agent.stats.cpu}<span class="stat-unit">%</span></span>
+                            <span class="agent-stat-value">${cpuValue}<span class="stat-unit">%</span></span>
                         </div>
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">RAM</span>
-                            <span class="agent-stat-value">${agent.stats.ram}<span class="stat-unit">%</span></span>
+                            <span class="agent-stat-value">${ramValue}<span class="stat-unit">%</span></span>
                         </div>
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">Temp</span>
-                            <span class="agent-stat-value">${agent.stats.temp}<span class="stat-unit">°C</span></span>
+                            <span class="agent-stat-value">${tempValue}<span class="stat-unit">°C</span></span>
                         </div>
                     </div>`
                 }
