@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"bytes"
 	"log"
 	"os"
 	"path/filepath"
@@ -48,7 +49,27 @@ func NewManager(path string) *Manager {
 func (m *Manager) Load() error {
 	data, err := os.ReadFile(m.path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			manifest := Manifest{Apps: []App{}, Agents: []Agent{}}
+			if err := m.writeManifestFile(&manifest); err != nil {
+				return err
+			}
+			m.mu.Lock()
+			m.manifest = &manifest
+			m.mu.Unlock()
+			log.Printf("Created new manifest at %s", m.path)
+			return nil
+		}
 		return err
+	}
+
+	if len(bytes.TrimSpace(data)) == 0 {
+		manifest := Manifest{Apps: []App{}, Agents: []Agent{}}
+		m.mu.Lock()
+		m.manifest = &manifest
+		m.mu.Unlock()
+		log.Printf("Loaded empty manifest from %s", m.path)
+		return nil
 	}
 
 	var manifest Manifest
@@ -97,6 +118,18 @@ func (m *Manager) GetAgents() []Agent {
 }
 
 func (m *Manager) Save(manifest *Manifest) error {
+	if err := m.writeManifestFile(manifest); err != nil {
+		return err
+	}
+
+	m.mu.Lock()
+	m.manifest = manifest
+	m.mu.Unlock()
+
+	return nil
+}
+
+func (m *Manager) writeManifestFile(manifest *Manifest) error {
 	ApplyDefaults(manifest)
 	data, err := yaml.Marshal(manifest)
 	if err != nil {
@@ -128,10 +161,6 @@ func (m *Manager) Save(manifest *Manifest) error {
 		os.Remove(tmpName)
 		return err
 	}
-
-	m.mu.Lock()
-	m.manifest = manifest
-	m.mu.Unlock()
 
 	return nil
 }
