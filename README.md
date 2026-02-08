@@ -26,10 +26,18 @@ Minimal dependencies, single binary, easy configuration via YAML manifest.
 
 ### Download and Run
 
-#### Linux
+#### Linux (amd64)
 
 ```bash
 curl -L -o homedash https://github.com/jlandersen/homedash/releases/latest/download/homedash-linux-amd64
+chmod +x homedash
+./homedash
+```
+
+#### Linux (arm64)
+
+```bash
+curl -L -o homedash https://github.com/jlandersen/homedash/releases/latest/download/homedash-linux-arm64
 chmod +x homedash
 ./homedash
 ```
