@@ -53,7 +53,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./apps.yaml:/apps.yaml:ro
+      - ./apps.yaml:/apps.yaml
     environment:
       - HOMEDASH_MANIFEST=/apps.yaml
     restart: unless-stopped
@@ -64,12 +64,28 @@ Then run:
 docker compose up -d
 ```
 
+If you want to disable editing from the UI, add `HOMEDASH_ALLOW_EDIT=false` to the environment variables and mark the `apps.yaml` file as read-only:
+
+```yaml
+services:
+  homedash:
+    image: ghcr.io/jlandersen/homedash:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./apps.yaml:/apps.yaml:ro
+    environment:
+      - HOMEDASH_MANIFEST=/apps.yaml
+      - HOMEDASH_ALLOW_EDIT=false
+    restart: unless-stopped
+```
+
 ### Using Docker
 
 ```bash
 docker pull ghcr.io/jlandersen/homedash:latest
 docker run -p 8080:8080 \
-  -v $(pwd)/apps.yaml:/apps.yaml:ro \
+  -v $(pwd)/apps.yaml:/apps.yaml \
   -e HOMEDASH_MANIFEST=/apps.yaml \
   ghcr.io/jlandersen/homedash:latest
 ```
