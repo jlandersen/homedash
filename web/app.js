@@ -76,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSparklineCleanup();
     
     fetchApps();
+    fetchStatsHistory();
     connectSSE();
 });
 
@@ -536,6 +537,19 @@ async function fetchApps() {
     }
 }
 
+async function fetchStatsHistory() {
+    try {
+        const res = await fetch('/api/stats');
+        if (!res.ok) {
+            throw new Error('Failed to fetch stats history');
+        }
+        const historyPayload = await res.json();
+        hydrateHistory(historyPayload);
+    } catch (err) {
+        console.error('Failed to fetch stats history:', err);
+    }
+}
+
 function connectSSE() {
     const es = new EventSource('/api/events');
     
@@ -687,6 +701,43 @@ function renderStats(s) {
         document.getElementById('temp-value').textContent = s.temp !== null ? s.temp.toFixed(0) : '--';
     }
     updateHostTrendValues(s);
+}
+
+function hydrateHistory(samples) {
+    if (!Array.isArray(samples) || samples.length === 0) {
+        return;
+    }
+
+    history.host.cpu = [];
+    history.host.ram = [];
+    history.host.temp = [];
+    history.host.netTx = [];
+    history.host.netRx = [];
+
+    samples.forEach((sample) => {
+        const timestamp = Date.parse(sample.Timestamp);
+        if (!Number.isFinite(timestamp)) return;
+        const s = sample.Stats || {};
+        pushHistory(history.host.cpu, timestamp, s.cpu);
+        pushHistory(history.host.ram, timestamp, s.ram);
+        pushHistory(history.host.temp, timestamp, s.temp);
+        pushHistory(history.host.netTx, timestamp, s.netTx);
+        pushHistory(history.host.netRx, timestamp, s.netRx);
+    });
+
+    const latest = samples[samples.length - 1];
+    if (latest && latest.Stats) {
+        stats = latest.Stats;
+    }
+
+    const now = Date.now();
+    pruneHistory(history.host.cpu, now);
+    pruneHistory(history.host.ram, now);
+    pruneHistory(history.host.temp, now);
+    pruneHistory(history.host.netTx, now);
+    pruneHistory(history.host.netRx, now);
+    renderHostSparklines();
+    updateHostTrendValues(stats);
 }
 
 function applyStatsVisibility() {

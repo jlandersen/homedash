@@ -2,6 +2,7 @@ package stats
 
 import (
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/cpu"
@@ -18,10 +19,21 @@ type SystemStats struct {
 	NetRX *float64 `json:"netRx"`
 }
 
+type Sample struct {
+	Timestamp time.Time
+	Stats     SystemStats
+}
+
 type Collector struct {
 	lastNetStats net.IOCountersStat
 	lastNetTime  time.Time
+	history      []Sample
+	mu           sync.Mutex
+	stopCh       chan struct{}
+	running      bool
 }
+
+const historyWindow = 5 * time.Minute
 
 func NewCollector() *Collector {
 	c := &Collector{
@@ -36,6 +48,7 @@ func NewCollector() *Collector {
 }
 
 func (c *Collector) Get() SystemStats {
+	now := time.Now()
 	stats := SystemStats{
 		CPU:   nil,
 		RAM:   nil,
@@ -62,7 +75,74 @@ func (c *Collector) Get() SystemStats {
 	stats.NetTX = netTx
 	stats.NetRX = netRx
 
+	c.recordSample(now, stats)
+
 	return stats
+}
+
+func (c *Collector) Start(interval time.Duration) {
+	if interval <= 0 {
+		interval = 2 * time.Second
+	}
+
+	c.mu.Lock()
+	if c.running {
+		c.mu.Unlock()
+		return
+	}
+	if c.stopCh == nil {
+		c.stopCh = make(chan struct{})
+	}
+	c.running = true
+	stopCh := c.stopCh
+	c.mu.Unlock()
+
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				c.Get()
+			case <-stopCh:
+				return
+			}
+		}
+	}()
+}
+
+func (c *Collector) Stop() {
+	c.mu.Lock()
+	if !c.running {
+		c.mu.Unlock()
+		return
+	}
+	close(c.stopCh)
+	c.stopCh = nil
+	c.running = false
+	c.mu.Unlock()
+}
+
+func (c *Collector) History() []Sample {
+	now := time.Now()
+	cutoff := now.Add(-historyWindow)
+
+	c.mu.Lock()
+	c.pruneLocked(cutoff)
+	historyCopy := make([]Sample, len(c.history))
+	copy(historyCopy, c.history)
+	c.mu.Unlock()
+
+	return historyCopy
+}
+
+func (c *Collector) Latest() (SystemStats, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if len(c.history) == 0 {
+		return SystemStats{}, false
+	}
+	return c.history[len(c.history)-1].Stats, true
 }
 
 func (c *Collector) getTemperature() *float64 {
@@ -105,10 +185,12 @@ func (c *Collector) getNetworkRates() (*float64, *float64) {
 	}
 
 	now := time.Now()
+	c.mu.Lock()
 	elapsed := now.Sub(c.lastNetTime).Seconds()
 
 	// Avoid division by zero
 	if elapsed < 0.1 {
+		c.mu.Unlock()
 		return nil, nil
 	}
 
@@ -121,6 +203,7 @@ func (c *Collector) getNetworkRates() (*float64, *float64) {
 	// Update last stats
 	c.lastNetStats = currentStats
 	c.lastNetTime = now
+	c.mu.Unlock()
 
 	// Convert to KB/s
 	txKbps := txRate / 1024
@@ -135,6 +218,25 @@ func (c *Collector) getNetworkRates() (*float64, *float64) {
 	}
 
 	return &txKbps, &rxKbps
+}
+
+func (c *Collector) recordSample(timestamp time.Time, stats SystemStats) {
+	cutoff := timestamp.Add(-historyWindow)
+
+	c.mu.Lock()
+	c.history = append(c.history, Sample{Timestamp: timestamp, Stats: stats})
+	c.pruneLocked(cutoff)
+	c.mu.Unlock()
+}
+
+func (c *Collector) pruneLocked(cutoff time.Time) {
+	idx := 0
+	for idx < len(c.history) && c.history[idx].Timestamp.Before(cutoff) {
+		idx++
+	}
+	if idx > 0 {
+		c.history = c.history[idx:]
+	}
 }
 
 // formatNetworkRate is no longer needed - removed

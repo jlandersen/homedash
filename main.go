@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"homedash/internal/api"
 	"homedash/internal/config"
@@ -36,6 +37,7 @@ func main() {
 	checker := health.NewChecker(manifestMgr, cfg.CheckInterval, cfg.CheckTimeout)
 
 	statsCollector := stats.NewCollector()
+	statsCollector.Start(2 * time.Second)
 
 	uiConfig := api.UIConfig{
 		TimeFormat24h: cfg.TimeFormat24h,
@@ -81,6 +83,9 @@ func main() {
 		log.Println("Shutting down...")
 		if checker != nil {
 			checker.Stop()
+		}
+		if statsCollector != nil {
+			statsCollector.Stop()
 		}
 		if manifestMgr != nil {
 			manifestMgr.Close()

@@ -160,8 +160,8 @@ func (h *Handler) handleStats(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	sysStats := h.stats.Get()
-	if err := json.NewEncoder(w).Encode(sysStats); err != nil {
+	history := h.stats.History()
+	if err := json.NewEncoder(w).Encode(history); err != nil {
 		log.Printf("Error encoding stats response: %v", err)
 	}
 }
@@ -233,7 +233,10 @@ func (h *Handler) sendAppsToClient(w http.ResponseWriter, flusher http.Flusher) 
 }
 
 func (h *Handler) sendStatsToClient(w http.ResponseWriter, flusher http.Flusher) {
-	sysStats := h.stats.Get()
+	sysStats, ok := h.stats.Latest()
+	if !ok {
+		sysStats = h.stats.Get()
+	}
 	data, err := json.Marshal(sysStats)
 	if err != nil {
 		log.Printf("Error marshaling stats: %v", err)
