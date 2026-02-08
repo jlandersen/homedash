@@ -519,31 +519,41 @@ function renderAgentStats(agents) {
                     `<div class="agent-error">${escapeHtml(agent.error)}</div>` :
                     `<div class="agent-stats-values">
                         <div class="agent-stat-item">
-                            <span class="agent-stat-label">CPU</span>
-                            <span class="agent-stat-value">${cpuValue}<span class="stat-unit">%</span></span>
-                            ${cpuSpark ? `<div class="agent-spark"><div class="agent-spark-value">${cpuValue}%</div><div class="sparkline small">${cpuSpark}</div></div>` : ''}
+                            <div class="sparkline-card agent">
+                                <div class="sparkline-label">CPU</div>
+                                <div class="sparkline-value">${cpuValue !== '--' ? `${cpuValue}%` : '--'}</div>
+                                <div class="sparkline small">${cpuSpark || ''}</div>
+                            </div>
                         </div>
                         <div class="agent-stat-item">
-                            <span class="agent-stat-label">RAM</span>
-                            <span class="agent-stat-value">${ramValue}<span class="stat-unit">%</span></span>
-                            ${ramSpark ? `<div class="agent-spark"><div class="agent-spark-value">${ramValue}%</div><div class="sparkline small">${ramSpark}</div></div>` : ''}
+                            <div class="sparkline-card agent">
+                                <div class="sparkline-label">RAM</div>
+                                <div class="sparkline-value">${ramValue !== '--' ? `${ramValue}%` : '--'}</div>
+                                <div class="sparkline small">${ramSpark || ''}</div>
+                            </div>
                         </div>
                         <div class="agent-stat-item">
-                            <span class="agent-stat-label">Temp</span>
-                            <span class="agent-stat-value">${tempValue}<span class="stat-unit">°C</span></span>
-                            ${tempSpark ? `<div class="agent-spark"><div class="agent-spark-value">${tempValue}°C</div><div class="sparkline small">${tempSpark}</div></div>` : ''}
+                            <div class="sparkline-card agent">
+                                <div class="sparkline-label">Temp</div>
+                                <div class="sparkline-value">${tempValue !== '--' ? `${tempValue}°C` : '--'}</div>
+                                <div class="sparkline small">${tempSpark || ''}</div>
+                            </div>
                         </div>
                         ${netTxValue ? `
                         <div class="agent-stat-item">
-                            <span class="agent-stat-label">TX</span>
-                            <span class="agent-stat-value">${netTxValue.value}<span class="stat-unit">${netTxValue.unit}</span></span>
-                            ${txSpark ? `<div class="agent-spark"><div class="agent-spark-value">${netTxValue.value}${netTxValue.unit}</div><div class="sparkline small">${txSpark}</div></div>` : ''}
+                            <div class="sparkline-card agent">
+                                <div class="sparkline-label">TX</div>
+                                <div class="sparkline-value">${netTxValue.value}${netTxValue.unit}</div>
+                                <div class="sparkline small">${txSpark || ''}</div>
+                            </div>
                         </div>` : ''}
                         ${netRxValue ? `
                         <div class="agent-stat-item">
-                            <span class="agent-stat-label">RX</span>
-                            <span class="agent-stat-value">${netRxValue.value}<span class="stat-unit">${netRxValue.unit}</span></span>
-                            ${rxSpark ? `<div class="agent-spark"><div class="agent-spark-value">${netRxValue.value}${netRxValue.unit}</div><div class="sparkline small">${rxSpark}</div></div>` : ''}
+                            <div class="sparkline-card agent">
+                                <div class="sparkline-label">RX</div>
+                                <div class="sparkline-value">${netRxValue.value}${netRxValue.unit}</div>
+                                <div class="sparkline small">${rxSpark || ''}</div>
+                            </div>
                         </div>` : ''}
                     </div>`
                 }
