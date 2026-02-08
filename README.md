@@ -11,6 +11,7 @@ Minimal dependencies, single binary, easy configuration via YAML manifest.
 ## Features
 
 - **Single binary** - Frontend embedded in Go binary, no external dependencies
+- **Edit from UI** - Add/remove apps directly from the dashboard - changes saved to `apps.yaml`
 - **YAML manifest** - Define your apps in a simple `apps.yaml` file
 - **Auto-refresh** - Dashboard updates automatically when manifest changes
 - **Health monitoring** - HTTP and TCP health checks with configurable intervals
@@ -25,42 +26,25 @@ Minimal dependencies, single binary, easy configuration via YAML manifest.
 
 ### Download and Run
 
+#### Linux
+
 ```bash
-# Clone the repository
-git clone https://github.com/jlandersen/homedash.git
-cd homedash
+curl -L -o homedash https://github.com/jlandersen/homedash/releases/latest/download/homedash-linux-amd64
+chmod +x homedash
+./homedash
+```
 
-# Build
-go build -o homedash .
+#### macOS (Apple Silicon)
 
-# Edit the manifest with your apps
-cp example.apps.yaml apps.yaml
-nano apps.yaml
-
-# Run
+```bash
+curl -L -o homedash https://github.com/jlandersen/homedash/releases/latest/download/homedash-darwin-arm64
+chmod +x homedash
 ./homedash
 ```
 
 Open http://localhost:8080 in your browser.
 
-### Using Docker
-
-#### Pull from GitHub Container Registry (Recommended)
-
-Pre-built multi-arch images (amd64, arm64/v8, arm/v7) are available:
-
-```bash
-# Pull the latest image
-docker pull ghcr.io/jlandersen/homedash:latest
-
-# Run with your apps.yaml
-docker run -p 8080:8080 \
-  -v $(pwd)/apps.yaml:/apps.yaml:ro \
-  -e HOMEDASH_MANIFEST=/apps.yaml \
-  ghcr.io/jlandersen/homedash:latest
-```
-
-#### Using Docker Compose
+### Using Docker Compose
 
 ```yaml
 services:
@@ -80,15 +64,14 @@ Then run:
 docker compose up -d
 ```
 
-#### Build Locally
+### Using Docker
 
 ```bash
-# Build and run with Docker Compose
-docker compose up -d
-
-# Or build manually
-docker build -t homedash .
-docker run -p 8080:8080 -v $(pwd)/apps.yaml:/apps.yaml:ro -e HOMEDASH_MANIFEST=/apps.yaml homedash
+docker pull ghcr.io/jlandersen/homedash:latest
+docker run -p 8080:8080 \
+  -v $(pwd)/apps.yaml:/apps.yaml:ro \
+  -e HOMEDASH_MANIFEST=/apps.yaml \
+  ghcr.io/jlandersen/homedash:latest
 ```
 
 The image uses `scratch` (empty base) and is only ~10MB.
