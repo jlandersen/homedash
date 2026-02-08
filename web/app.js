@@ -506,11 +506,11 @@ function renderAgentStats(agents) {
         pruneHistory(agentHistory.temp, now);
         pruneHistory(agentHistory.netTx, now);
         pruneHistory(agentHistory.netRx, now);
-        const cpuSpark = renderSparkline(agentHistory.cpu, { min: 0, max: 100 });
-        const ramSpark = renderSparkline(agentHistory.ram, { min: 0, max: 100 });
-        const tempSpark = renderSparkline(agentHistory.temp);
-        const txSpark = renderSparkline(agentHistory.netTx);
-        const rxSpark = renderSparkline(agentHistory.netRx);
+        const cpuSpark = renderSparkline(agentHistory.cpu, { min: 0, max: 100, strokeWidth: 1.5 });
+        const ramSpark = renderSparkline(agentHistory.ram, { min: 0, max: 100, strokeWidth: 1.5 });
+        const tempSpark = renderSparkline(agentHistory.temp, { strokeWidth: 1.5 });
+        const txSpark = renderSparkline(agentHistory.netTx, { strokeWidth: 1.5 });
+        const rxSpark = renderSparkline(agentHistory.netRx, { strokeWidth: 1.5 });
         
         html += `
             <div class="agent-stat-card ${statusClass}">
@@ -521,29 +521,29 @@ function renderAgentStats(agents) {
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">CPU</span>
                             <span class="agent-stat-value">${cpuValue}<span class="stat-unit">%</span></span>
-                            ${cpuSpark ? `<div class="sparkline small">${cpuSpark}</div>` : ''}
+                            ${cpuSpark ? `<div class="agent-spark"><div class="agent-spark-value">${cpuValue}%</div><div class="sparkline small">${cpuSpark}</div></div>` : ''}
                         </div>
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">RAM</span>
                             <span class="agent-stat-value">${ramValue}<span class="stat-unit">%</span></span>
-                            ${ramSpark ? `<div class="sparkline small">${ramSpark}</div>` : ''}
+                            ${ramSpark ? `<div class="agent-spark"><div class="agent-spark-value">${ramValue}%</div><div class="sparkline small">${ramSpark}</div></div>` : ''}
                         </div>
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">Temp</span>
                             <span class="agent-stat-value">${tempValue}<span class="stat-unit">°C</span></span>
-                            ${tempSpark ? `<div class="sparkline small">${tempSpark}</div>` : ''}
+                            ${tempSpark ? `<div class="agent-spark"><div class="agent-spark-value">${tempValue}°C</div><div class="sparkline small">${tempSpark}</div></div>` : ''}
                         </div>
                         ${netTxValue ? `
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">TX</span>
                             <span class="agent-stat-value">${netTxValue.value}<span class="stat-unit">${netTxValue.unit}</span></span>
-                            ${txSpark ? `<div class="sparkline small">${txSpark}</div>` : ''}
+                            ${txSpark ? `<div class="agent-spark"><div class="agent-spark-value">${netTxValue.value}${netTxValue.unit}</div><div class="sparkline small">${txSpark}</div></div>` : ''}
                         </div>` : ''}
                         ${netRxValue ? `
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">RX</span>
                             <span class="agent-stat-value">${netRxValue.value}<span class="stat-unit">${netRxValue.unit}</span></span>
-                            ${rxSpark ? `<div class="sparkline small">${rxSpark}</div>` : ''}
+                            ${rxSpark ? `<div class="agent-spark"><div class="agent-spark-value">${netRxValue.value}${netRxValue.unit}</div><div class="sparkline small">${rxSpark}</div></div>` : ''}
                         </div>` : ''}
                     </div>`
                 }
@@ -646,13 +646,14 @@ function renderSparkline(series, options = {}) {
     const span = maxVal - minVal || 1;
     const width = 120;
     const height = 28;
+    const strokeWidth = options.strokeWidth || 2;
     const step = width / (points.length - 1);
     const path = points.map((point, index) => {
         const x = index * step;
         const y = height - ((point.v - minVal) / span) * height;
         return `${index === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(' ');
-    return `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    return `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
 function escapeHtml(text) {
