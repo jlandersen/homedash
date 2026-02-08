@@ -43,7 +43,7 @@ const history = {
 };
 
 
-let clockEl, dateEl, appGridEl, searchBtn, themeBtn, commandPalette, searchInput, searchResults, statsDetailsEl;
+let clockEl, dateEl, appGridEl, searchBtn, themeBtn, viewBtn, commandPalette, searchInput, searchResults, statsDetailsEl;
 
 document.addEventListener('DOMContentLoaded', () => {
     clockEl = document.getElementById('clock');
@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     appGridEl = document.getElementById('appGrid');
     searchBtn = document.getElementById('searchBtn');
     themeBtn = document.getElementById('themeBtn');
+    viewBtn = document.getElementById('viewBtn');
     commandPalette = document.getElementById('commandPalette');
     searchInput = document.getElementById('searchInput');
     searchResults = document.getElementById('searchResults');
@@ -58,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initClock();
     initTheme();
+    initView();
     initCommandPalette();
     initKeyboardShortcuts();
     initStatsDetails();
@@ -95,6 +97,22 @@ function toggleTheme() {
     document.body.classList.toggle('light');
     const isLight = document.body.classList.contains('light');
     localStorage.setItem('homedash-theme', isLight ? 'light' : 'dark');
+}
+
+function initView() {
+    const savedView = localStorage.getItem('homedash-view');
+    if (savedView === 'small') {
+        document.body.classList.add('view-small');
+    }
+    if (viewBtn) {
+        viewBtn.addEventListener('click', toggleView);
+    }
+}
+
+function toggleView() {
+    document.body.classList.toggle('view-small');
+    const isSmall = document.body.classList.contains('view-small');
+    localStorage.setItem('homedash-view', isSmall ? 'small' : 'cards');
 }
 
 function initCommandPalette() {
