@@ -101,8 +101,15 @@ func (c *Checker) GetStatuses() []AppStatus {
 	for i, app := range apps {
 		key := app.Name + "|" + app.URL
 		if status, ok := c.statuses[key]; ok {
-			status.ID = i + 1
-			result = append(result, *status)
+			result = append(result, AppStatus{
+				ID:       i + 1,
+				Name:     app.Name,
+				URL:      app.URL,
+				Category: app.Category,
+				Icon:     app.Icon,
+				Status:   status.Status,
+				Ping:     status.Ping,
+			})
 		} else {
 			initialStatus := StatusUnknown
 			if app.SkipCheck {

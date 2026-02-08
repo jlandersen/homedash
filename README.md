@@ -109,6 +109,7 @@ The image uses `scratch` (empty base) and is only ~10MB.
 | `HOMEDASH_SHOW_CPU` | `true` | Show CPU usage stat |
 | `HOMEDASH_SHOW_RAM` | `true` | Show RAM usage stat |
 | `HOMEDASH_SHOW_TEMP` | `true` | Show temperature stat |
+| `HOMEDASH_ALLOW_EDIT` | `true` | Allow editing apps from the UI |
 | `HOMEDASH_AGENT_MODE` | `false` | Run in agent mode (stats endpoint only) |
 | `HOMEDASH_TLS_CERT` | - | Path to TLS certificate file |
 | `HOMEDASH_TLS_KEY` | - | Path to TLS private key file |

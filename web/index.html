@@ -107,6 +107,9 @@
                 <svg class="cards-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
                 <svg class="rows-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></svg>
             </button>
+            <button class="edit-toggle" id="editBtn" title="Edit apps">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
         </div>
 
         <!-- App grid by category -->
@@ -125,6 +128,24 @@
             </div>
             <div class="search-results" id="searchResults">
                 <div class="search-hint">Type to search...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit mode modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal edit-modal">
+            <div class="modal-header">
+                <div class="modal-title">Edit Apps</div>
+                <div class="modal-actions">
+                    <button class="secondary-button" id="editCancelBtn">Cancel</button>
+                    <button class="primary-button" id="editSaveBtn">Save</button>
+                </div>
+            </div>
+            <div class="edit-body">
+                <div class="edit-hint">Edit apps below. Delete removes the entry from apps.yaml.</div>
+                <div class="edit-list" id="editList"></div>
+                <button class="ghost-button" id="editAddBtn">Add app</button>
             </div>
         </div>
     </div>

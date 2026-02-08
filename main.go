@@ -59,8 +59,9 @@ func main() {
 		ShowTemp:      cfg.ShowTemp,
 		ShowNetTX:     cfg.ShowNetTX,
 		ShowNetRX:     cfg.ShowNetRX,
+		AllowEdit:     cfg.AllowEdit,
 	}
-	handler := api.NewHandler(checker, statsCollector, agentStatsCollector, uiConfig)
+	handler := api.NewHandler(checker, statsCollector, agentStatsCollector, manifestMgr, uiConfig)
 
 	if !cfg.AgentMode {
 		checker.Start(func(statuses []health.AppStatus) {

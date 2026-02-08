@@ -3,6 +3,7 @@ package manifest
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
@@ -55,17 +56,7 @@ func (m *Manager) Load() error {
 		return err
 	}
 
-	for i := range manifest.Apps {
-		if manifest.Apps[i].Icon == "" {
-			manifest.Apps[i].Icon = "box"
-		}
-		if manifest.Apps[i].Category == "" {
-			manifest.Apps[i].Category = "Uncategorized"
-		}
-		if manifest.Apps[i].CheckType == "" {
-			manifest.Apps[i].CheckType = "http"
-		}
-	}
+	ApplyDefaults(&manifest)
 
 	m.mu.Lock()
 	m.manifest = &manifest
@@ -84,6 +75,18 @@ func (m *Manager) GetApps() []App {
 	return apps
 }
 
+func (m *Manager) GetManifest() Manifest {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	apps := make([]App, len(m.manifest.Apps))
+	copy(apps, m.manifest.Apps)
+	agents := make([]Agent, len(m.manifest.Agents))
+	copy(agents, m.manifest.Agents)
+
+	return Manifest{Apps: apps, Agents: agents}
+}
+
 func (m *Manager) GetAgents() []Agent {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -91,6 +94,46 @@ func (m *Manager) GetAgents() []Agent {
 	agents := make([]Agent, len(m.manifest.Agents))
 	copy(agents, m.manifest.Agents)
 	return agents
+}
+
+func (m *Manager) Save(manifest *Manifest) error {
+	ApplyDefaults(manifest)
+	data, err := yaml.Marshal(manifest)
+	if err != nil {
+		return err
+	}
+
+	dir := filepath.Dir(m.path)
+	tmpFile, err := os.CreateTemp(dir, "manifest-*.yaml")
+	if err != nil {
+		return err
+	}
+	tmpName := tmpFile.Name()
+
+	if _, err := tmpFile.Write(data); err != nil {
+		tmpFile.Close()
+		os.Remove(tmpName)
+		return err
+	}
+	if err := tmpFile.Close(); err != nil {
+		os.Remove(tmpName)
+		return err
+	}
+
+	if info, err := os.Stat(m.path); err == nil {
+		_ = os.Chmod(tmpName, info.Mode())
+	}
+
+	if err := os.Rename(tmpName, m.path); err != nil {
+		os.Remove(tmpName)
+		return err
+	}
+
+	m.mu.Lock()
+	m.manifest = manifest
+	m.mu.Unlock()
+
+	return nil
 }
 
 func (m *Manager) Watch(onChange func(*Manifest)) error {
@@ -136,4 +179,21 @@ func (m *Manager) Close() error {
 		return m.watcher.Close()
 	}
 	return nil
+}
+
+func ApplyDefaults(manifest *Manifest) {
+	if manifest == nil {
+		return
+	}
+	for i := range manifest.Apps {
+		if manifest.Apps[i].Icon == "" {
+			manifest.Apps[i].Icon = "box"
+		}
+		if manifest.Apps[i].Category == "" {
+			manifest.Apps[i].Category = "Uncategorized"
+		}
+		if manifest.Apps[i].CheckType == "" {
+			manifest.Apps[i].CheckType = "http"
+		}
+	}
 }

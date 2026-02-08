@@ -6,11 +6,13 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
 	"homedash/internal/agentstats"
 	"homedash/internal/health"
+	"homedash/internal/manifest"
 	"homedash/internal/stats"
 )
 
@@ -21,22 +23,25 @@ type UIConfig struct {
 	ShowTemp      bool `json:"showTemp"`
 	ShowNetTX     bool `json:"showNetTX"`
 	ShowNetRX     bool `json:"showNetRX"`
+	AllowEdit     bool `json:"allowEdit"`
 }
 
 type Handler struct {
 	checker    *health.Checker
 	stats      *stats.Collector
 	agentStats *agentstats.Collector
+	manifest   *manifest.Manager
 	uiConfig   UIConfig
 	clients    map[chan []byte]bool
 	clientsMu  sync.RWMutex
 }
 
-func NewHandler(checker *health.Checker, statsCollector *stats.Collector, agentStatsCollector *agentstats.Collector, uiConfig UIConfig) *Handler {
+func NewHandler(checker *health.Checker, statsCollector *stats.Collector, agentStatsCollector *agentstats.Collector, manifestMgr *manifest.Manager, uiConfig UIConfig) *Handler {
 	return &Handler{
 		checker:    checker,
 		stats:      statsCollector,
 		agentStats: agentStatsCollector,
+		manifest:   manifestMgr,
 		uiConfig:   uiConfig,
 		clients:    make(map[chan []byte]bool),
 	}
@@ -44,6 +49,7 @@ func NewHandler(checker *health.Checker, statsCollector *stats.Collector, agentS
 
 func (h *Handler) RegisterRoutes(mux *http.ServeMux, webFS fs.FS) {
 	mux.HandleFunc("/api/apps", h.handleApps)
+	mux.HandleFunc("/api/manifest", h.handleManifest)
 	mux.HandleFunc("/api/config", h.handleConfig)
 	mux.HandleFunc("/api/events", h.handleSSE)
 	mux.HandleFunc("/api/stats", h.handleStats)
@@ -55,6 +61,10 @@ func (h *Handler) handleApps(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	if h.checker == nil {
+		http.Error(w, "Apps not available in agent mode", http.StatusNotFound)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -62,6 +72,80 @@ func (h *Handler) handleApps(w http.ResponseWriter, r *http.Request) {
 	statuses := h.checker.GetStatuses()
 	if err := json.NewEncoder(w).Encode(statuses); err != nil {
 		log.Printf("Error encoding apps response: %v", err)
+	}
+}
+
+func (h *Handler) handleManifest(w http.ResponseWriter, r *http.Request) {
+	if h.manifest == nil {
+		http.Error(w, "Manifest not available in agent mode", http.StatusNotFound)
+		return
+	}
+	if !h.uiConfig.AllowEdit {
+		http.Error(w, "Editing is disabled", http.StatusForbidden)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	switch r.Method {
+	case http.MethodGet:
+		manifestCopy := h.manifest.GetManifest()
+		if err := json.NewEncoder(w).Encode(manifestCopy); err != nil {
+			log.Printf("Error encoding manifest response: %v", err)
+		}
+		return
+	case http.MethodPut:
+		var payload struct {
+			Apps *[]manifest.App `json:"apps"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+		if payload.Apps == nil {
+			http.Error(w, "apps field is required", http.StatusBadRequest)
+			return
+		}
+
+		apps := make([]manifest.App, len(*payload.Apps))
+		copy(apps, *payload.Apps)
+		for i := range apps {
+			apps[i].Name = strings.TrimSpace(apps[i].Name)
+			apps[i].URL = strings.TrimSpace(apps[i].URL)
+			apps[i].Category = strings.TrimSpace(apps[i].Category)
+			apps[i].Icon = strings.TrimSpace(apps[i].Icon)
+			apps[i].CheckPath = strings.TrimSpace(apps[i].CheckPath)
+			apps[i].CheckType = strings.TrimSpace(apps[i].CheckType)
+			if apps[i].Name == "" || apps[i].URL == "" {
+				http.Error(w, "Each app must have name and url", http.StatusBadRequest)
+				return
+			}
+			if apps[i].CheckType != "" && apps[i].CheckType != "http" && apps[i].CheckType != "tcp" {
+				http.Error(w, "check_type must be http or tcp", http.StatusBadRequest)
+				return
+			}
+		}
+
+		current := h.manifest.GetManifest()
+		updated := manifest.Manifest{Apps: apps, Agents: current.Agents}
+		if err := h.manifest.Save(&updated); err != nil {
+			log.Printf("Error saving manifest: %v", err)
+			http.Error(w, "Failed to save manifest", http.StatusInternalServerError)
+			return
+		}
+
+		if h.checker != nil {
+			h.checker.RefreshApps()
+		}
+
+		if err := json.NewEncoder(w).Encode(updated); err != nil {
+			log.Printf("Error encoding manifest response: %v", err)
+		}
+		return
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
 	}
 }
 

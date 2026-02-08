@@ -29,6 +29,8 @@ const ICONS = {
     box: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
 };
 
+const ICON_OPTIONS = Object.keys(ICONS);
+
 // State
 let apps = [];
 let stats = { cpu: null, ram: null, temp: null, netTx: null, netRx: null };
@@ -43,7 +45,10 @@ const history = {
 };
 
 
-let clockEl, dateEl, appGridEl, searchBtn, themeBtn, viewBtn, commandPalette, searchInput, searchResults, statsDetailsEl;
+let clockEl, dateEl, appGridEl, searchBtn, themeBtn, viewBtn, editBtn, commandPalette, searchInput, searchResults, statsDetailsEl;
+let editModal, editListEl, editSaveBtn, editCancelBtn, editAddBtn;
+let isEditMode = false;
+let editAppsDraft = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     clockEl = document.getElementById('clock');
@@ -52,16 +57,23 @@ document.addEventListener('DOMContentLoaded', () => {
     searchBtn = document.getElementById('searchBtn');
     themeBtn = document.getElementById('themeBtn');
     viewBtn = document.getElementById('viewBtn');
+    editBtn = document.getElementById('editBtn');
     commandPalette = document.getElementById('commandPalette');
     searchInput = document.getElementById('searchInput');
     searchResults = document.getElementById('searchResults');
     statsDetailsEl = document.getElementById('statsDetails');
+    editModal = document.getElementById('editModal');
+    editListEl = document.getElementById('editList');
+    editSaveBtn = document.getElementById('editSaveBtn');
+    editCancelBtn = document.getElementById('editCancelBtn');
+    editAddBtn = document.getElementById('editAddBtn');
 
     initClock();
     initTheme();
     initView();
     initCommandPalette();
     initKeyboardShortcuts();
+    initEditMode();
     initStatsDetails();
     initSparklineCleanup();
     
@@ -149,9 +161,68 @@ function initKeyboardShortcuts() {
             e.preventDefault();
             openCommandPalette();
         }
+
+        if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
+            e.preventDefault();
+            openEditMode();
+        }
         
         if (e.key === 'Escape') {
             closeCommandPalette();
+            closeEditMode();
+        }
+    });
+}
+
+function initEditMode() {
+    if (!editBtn || !editModal) return;
+    editBtn.addEventListener('click', openEditMode);
+    editCancelBtn.addEventListener('click', closeEditMode);
+    editSaveBtn.addEventListener('click', saveEditMode);
+    editAddBtn.addEventListener('click', addEditRow);
+
+    editModal.addEventListener('click', (e) => {
+        if (e.target === editModal) {
+            closeEditMode();
+        }
+    });
+
+    editListEl.addEventListener('input', (e) => {
+        const row = e.target.closest('[data-edit-index]');
+        if (!row) return;
+        const index = Number(row.dataset.editIndex);
+        const key = e.target.dataset.field;
+        if (!key || Number.isNaN(index)) return;
+        if (key === 'skipCheck') return;
+        editAppsDraft[index][key] = e.target.value;
+        row.dataset.dirty = 'true';
+    });
+
+    editListEl.addEventListener('change', (e) => {
+        const row = e.target.closest('[data-edit-index]');
+        if (!row) return;
+        const index = Number(row.dataset.editIndex);
+        if (Number.isNaN(index)) return;
+        const field = e.target.dataset.field;
+        if (!field) return;
+        if (field === 'skipCheck') {
+            editAppsDraft[index].skipCheck = e.target.checked;
+        } else {
+            editAppsDraft[index][field] = e.target.value;
+        }
+        row.dataset.dirty = 'true';
+    });
+
+    editListEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const row = btn.closest('[data-edit-index]');
+        if (!row) return;
+        const index = Number(row.dataset.editIndex);
+        if (Number.isNaN(index)) return;
+        if (btn.dataset.action === 'delete') {
+            editAppsDraft.splice(index, 1);
+            renderEditList();
         }
     });
 }
@@ -203,6 +274,164 @@ function closeCommandPalette() {
     searchInput.value = '';
     selectedIndex = -1;
     filteredResults = [];
+}
+
+async function openEditMode() {
+    if (!editModal) return;
+    if (config.allowEdit === false) {
+        return;
+    }
+    try {
+        const res = await fetch('/api/manifest');
+        if (!res.ok) {
+            throw new Error('Failed to load manifest');
+        }
+        const manifestData = await res.json();
+        const appList = Array.isArray(manifestData.apps) ? manifestData.apps : [];
+        editAppsDraft = appList.map((app) => ({
+            name: app.name || '',
+            url: app.url || '',
+            category: app.category || '',
+            icon: app.icon || '',
+            checkPath: app.checkPath || '',
+            checkType: app.checkType || '',
+            skipCheck: Boolean(app.skipCheck)
+        }));
+        renderEditList();
+        editModal.classList.add('open');
+        isEditMode = true;
+    } catch (err) {
+        console.error('Failed to open edit mode:', err);
+        alert('Failed to load apps for editing. Check server logs.');
+    }
+}
+
+function closeEditMode() {
+    if (!editModal || !isEditMode) return;
+    editModal.classList.remove('open');
+    isEditMode = false;
+    editAppsDraft = [];
+}
+
+function addEditRow() {
+    editAppsDraft.push({
+        name: '',
+        url: '',
+        category: '',
+        icon: '',
+        checkPath: '',
+        checkType: '',
+        skipCheck: false
+    });
+    renderEditList();
+    const rows = editListEl.querySelectorAll('[data-edit-index]');
+    const lastRow = rows[rows.length - 1];
+    const firstInput = lastRow ? lastRow.querySelector('input[data-field="name"]') : null;
+    if (firstInput) {
+        firstInput.focus();
+    }
+}
+
+function renderEditList() {
+    if (!editListEl) return;
+    if (!editAppsDraft.length) {
+        editListEl.innerHTML = '<div class="empty-state">No apps yet. Add one to get started.</div>';
+        return;
+    }
+
+    editListEl.innerHTML = editAppsDraft.map((app, index) => {
+        const iconOptions = [''].concat(ICON_OPTIONS).map((icon) => {
+            const label = icon ? icon : 'auto (box)';
+            const selected = icon === (app.icon || '') ? 'selected' : '';
+            return `<option value="${escapeHtml(icon)}" ${selected}>${escapeHtml(label)}</option>`;
+        }).join('');
+        const checkTypeOptions = [
+            { value: '', label: 'auto (http)' },
+            { value: 'http', label: 'http' },
+            { value: 'tcp', label: 'tcp' }
+        ].map((option) => {
+            const selected = option.value === (app.checkType || '') ? 'selected' : '';
+            return `<option value="${option.value}" ${selected}>${option.label}</option>`;
+        }).join('');
+        return `
+            <div class="edit-row" data-edit-index="${index}">
+                <div class="edit-fields">
+                    <label>
+                        <span>Name</span>
+                        <input type="text" data-field="name" value="${escapeHtml(app.name)}" placeholder="Name" />
+                    </label>
+                    <label>
+                        <span>URL</span>
+                        <input type="text" data-field="url" value="${escapeHtml(app.url)}" placeholder="http://..." />
+                    </label>
+                    <label>
+                        <span>Category</span>
+                        <input type="text" data-field="category" value="${escapeHtml(app.category)}" placeholder="Category" />
+                    </label>
+                    <label>
+                        <span>Icon</span>
+                        <select data-field="icon">
+                            ${iconOptions}
+                        </select>
+                    </label>
+                    <label>
+                        <span>Check path</span>
+                        <input type="text" data-field="checkPath" value="${escapeHtml(app.checkPath)}" placeholder="/" />
+                    </label>
+                    <label>
+                        <span>Check type</span>
+                        <select data-field="checkType">
+                            ${checkTypeOptions}
+                        </select>
+                    </label>
+                    <label class="checkbox-field">
+                        <input type="checkbox" data-field="skipCheck" ${app.skipCheck ? 'checked' : ''} />
+                        <span>Skip checks</span>
+                    </label>
+                </div>
+                <button class="danger-button" data-action="delete">Delete</button>
+            </div>
+        `;
+    }).join('');
+}
+
+async function saveEditMode() {
+    if (!isEditMode) return;
+
+    const payload = {
+        apps: editAppsDraft.map((app) => ({
+            name: app.name || '',
+            url: app.url || '',
+            category: app.category || '',
+            icon: app.icon || '',
+            checkPath: app.checkPath || '',
+            checkType: app.checkType || '',
+            skipCheck: Boolean(app.skipCheck)
+        }))
+    };
+
+    try {
+        editSaveBtn.disabled = true;
+        editSaveBtn.textContent = 'Saving...';
+        const res = await fetch('/api/manifest', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+            const message = await res.text();
+            throw new Error(message || 'Failed to save manifest');
+        }
+        await res.json();
+        closeEditMode();
+        await fetchApps();
+    } catch (err) {
+        console.error('Failed to save manifest:', err);
+        alert(`Save failed: ${err.message || err}`);
+    } finally {
+        editSaveBtn.disabled = false;
+        editSaveBtn.textContent = 'Save';
+    }
 }
 
 function filterApps(query) {
@@ -302,6 +531,7 @@ async function fetchApps() {
         const res = await fetch('/api/apps');
         apps = await res.json();
         renderApps(apps);
+        applyEditVisibility();
     } catch (err) {
         console.error('Failed to fetch apps:', err);
         appGridEl.innerHTML = '<div class="loading">Failed to load apps. Is the server running?</div>';
@@ -316,6 +546,7 @@ function connectSSE() {
             config = JSON.parse(e.data);
             updateClock();
             applyStatsVisibility();
+            applyEditVisibility();
         } catch (err) {
             console.error('Failed to parse config event:', err);
         }
@@ -480,6 +711,16 @@ function applyStatsVisibility() {
     if (statsDetailsEl) {
         const showDetails = (config.showNetTX || config.showNetRX) || (agentStats && agentStats.length > 0);
         statsDetailsEl.style.display = showDetails ? '' : 'none';
+    }
+}
+
+function applyEditVisibility() {
+    if (!editBtn) return;
+    if (config.allowEdit === false) {
+        editBtn.style.display = 'none';
+        closeEditMode();
+    } else {
+        editBtn.style.display = '';
     }
 }
 
