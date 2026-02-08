@@ -38,7 +38,7 @@ let selectedIndex = -1;
 let filteredResults = [];
 
 
-let clockEl, dateEl, appGridEl, searchBtn, themeBtn, commandPalette, searchInput, searchResults;
+let clockEl, dateEl, appGridEl, searchBtn, themeBtn, commandPalette, searchInput, searchResults, statsDetailsEl;
 
 document.addEventListener('DOMContentLoaded', () => {
     clockEl = document.getElementById('clock');
@@ -49,11 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
     commandPalette = document.getElementById('commandPalette');
     searchInput = document.getElementById('searchInput');
     searchResults = document.getElementById('searchResults');
+    statsDetailsEl = document.getElementById('statsDetails');
 
     initClock();
     initTheme();
     initCommandPalette();
     initKeyboardShortcuts();
+    initStatsDetails();
     
     fetchApps();
     connectSSE();
@@ -126,6 +128,40 @@ function initKeyboardShortcuts() {
         
         if (e.key === 'Escape') {
             closeCommandPalette();
+        }
+    });
+}
+
+function initStatsDetails() {
+    if (!statsDetailsEl) return;
+    const panel = statsDetailsEl.querySelector('.details-panel');
+    const statsSection = document.getElementById('stats');
+    if (!panel || !statsSection) return;
+
+    let closeTimer;
+
+    const openPanel = () => {
+        clearTimeout(closeTimer);
+        statsDetailsEl.classList.add('open');
+    };
+
+    const closePanel = () => {
+        statsDetailsEl.classList.remove('open');
+    };
+
+    const scheduleClose = () => {
+        clearTimeout(closeTimer);
+        closeTimer = setTimeout(closePanel, 150);
+    };
+
+    statsSection.addEventListener('mouseenter', openPanel);
+    statsSection.addEventListener('mouseleave', scheduleClose);
+    panel.addEventListener('mouseenter', openPanel);
+    panel.addEventListener('mouseleave', scheduleClose);
+
+    document.addEventListener('click', (event) => {
+        if (!statsDetailsEl.contains(event.target) && !statsSection.contains(event.target)) {
+            closePanel();
         }
     });
 }
@@ -398,26 +434,20 @@ function renderStats(s) {
         if (s.netTx === null) {
             document.getElementById('net-tx-value').textContent = '--';
             document.getElementById('stat-net-tx').querySelector('.stat-unit').textContent = 'KB/s';
-        } else if (s.netTx >= 1024) {
-            const mbps = s.netTx / 1024;
-            document.getElementById('net-tx-value').textContent = mbps.toFixed(1);
-            document.getElementById('stat-net-tx').querySelector('.stat-unit').textContent = 'MB/s';
         } else {
-            document.getElementById('net-tx-value').textContent = s.netTx.toFixed(1);
-            document.getElementById('stat-net-tx').querySelector('.stat-unit').textContent = 'KB/s';
+            const formatted = formatNetValue(s.netTx);
+            document.getElementById('net-tx-value').textContent = formatted.value;
+            document.getElementById('stat-net-tx').querySelector('.stat-unit').textContent = formatted.unit;
         }
     }
     if (config.showNetRX) {
         if (s.netRx === null) {
             document.getElementById('net-rx-value').textContent = '--';
             document.getElementById('stat-net-rx').querySelector('.stat-unit').textContent = 'KB/s';
-        } else if (s.netRx >= 1024) {
-            const mbps = s.netRx / 1024;
-            document.getElementById('net-rx-value').textContent = mbps.toFixed(1);
-            document.getElementById('stat-net-rx').querySelector('.stat-unit').textContent = 'MB/s';
         } else {
-            document.getElementById('net-rx-value').textContent = s.netRx.toFixed(1);
-            document.getElementById('stat-net-rx').querySelector('.stat-unit').textContent = 'KB/s';
+            const formatted = formatNetValue(s.netRx);
+            document.getElementById('net-rx-value').textContent = formatted.value;
+            document.getElementById('stat-net-rx').querySelector('.stat-unit').textContent = formatted.unit;
         }
     }
 }
@@ -428,13 +458,28 @@ function applyStatsVisibility() {
     document.getElementById('stat-temp').style.display = config.showTemp ? '' : 'none';
     document.getElementById('stat-net-tx').style.display = config.showNetTX ? '' : 'none';
     document.getElementById('stat-net-rx').style.display = config.showNetRX ? '' : 'none';
+    const detailsNetworkEl = document.getElementById('detailsNetwork');
+    if (detailsNetworkEl) {
+        detailsNetworkEl.style.display = (config.showNetTX || config.showNetRX) ? '' : 'none';
+    }
+    if (statsDetailsEl) {
+        const showDetails = (config.showNetTX || config.showNetRX) || (agentStats && agentStats.length > 0);
+        statsDetailsEl.style.display = showDetails ? '' : 'none';
+    }
 }
 
 function renderAgentStats(agents) {
     const agentStatsEl = document.getElementById('agentStats');
+    const detailsAgentsEl = document.getElementById('detailsAgents');
     
     if (!agents || agents.length === 0) {
         agentStatsEl.style.display = 'none';
+        if (detailsAgentsEl) {
+            detailsAgentsEl.style.display = 'none';
+        }
+        if (statsDetailsEl && !(config.showNetTX || config.showNetRX)) {
+            statsDetailsEl.style.display = 'none';
+        }
         return;
     }
     
@@ -450,6 +495,8 @@ function renderAgentStats(agents) {
         const cpuValue = agent.stats.cpu !== null && agent.stats.cpu !== undefined ? agent.stats.cpu.toFixed(0) : '--';
         const ramValue = agent.stats.ram !== null && agent.stats.ram !== undefined ? agent.stats.ram.toFixed(0) : '--';
         const tempValue = agent.stats.temp !== null && agent.stats.temp !== undefined ? agent.stats.temp.toFixed(0) : '--';
+        const netTxValue = agent.stats.netTx !== null && agent.stats.netTx !== undefined ? formatNetValue(agent.stats.netTx) : null;
+        const netRxValue = agent.stats.netRx !== null && agent.stats.netRx !== undefined ? formatNetValue(agent.stats.netRx) : null;
         
         html += `
             <div class="agent-stat-card ${statusClass}">
@@ -469,6 +516,16 @@ function renderAgentStats(agents) {
                             <span class="agent-stat-label">Temp</span>
                             <span class="agent-stat-value">${tempValue}<span class="stat-unit">°C</span></span>
                         </div>
+                        ${netTxValue ? `
+                        <div class="agent-stat-item">
+                            <span class="agent-stat-label">TX</span>
+                            <span class="agent-stat-value">${netTxValue.value}<span class="stat-unit">${netTxValue.unit}</span></span>
+                        </div>` : ''}
+                        ${netRxValue ? `
+                        <div class="agent-stat-item">
+                            <span class="agent-stat-label">RX</span>
+                            <span class="agent-stat-value">${netRxValue.value}<span class="stat-unit">${netRxValue.unit}</span></span>
+                        </div>` : ''}
                     </div>`
                 }
             </div>
@@ -477,6 +534,20 @@ function renderAgentStats(agents) {
     
     html += '</div>';
     agentStatsEl.innerHTML = html;
+    if (detailsAgentsEl) {
+        detailsAgentsEl.style.display = '';
+    }
+    if (statsDetailsEl) {
+        statsDetailsEl.style.display = '';
+    }
+}
+
+function formatNetValue(value) {
+    if (value === null || value === undefined) return null;
+    if (value >= 1024) {
+        return { value: (value / 1024).toFixed(1), unit: 'MB/s' };
+    }
+    return { value: value.toFixed(1), unit: 'KB/s' };
 }
 
 function escapeHtml(text) {

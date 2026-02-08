@@ -203,6 +203,81 @@ body {
     transition: all 0.2s;
 }
 
+.stats-details {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.details-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.5rem);
+    width: min(520px, 90vw);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lg);
+    padding: 1rem;
+    display: none;
+    z-index: 80;
+    animation: scaleIn 0.12s ease-out;
+}
+
+.stats-details.open .details-panel {
+    display: block;
+}
+
+.details-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.details-section + .details-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.details-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+}
+
+.details-stats {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.details-stats .stat-card {
+    padding: 0.65rem 0.85rem;
+}
+
+.details-agents {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.agent-stats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+@media (min-width: 768px) {
+    .details-panel {
+        width: min(640px, 60vw);
+        max-height: 70vh;
+        overflow: auto;
+    }
+}
+
 .stat-card:hover {
     background: var(--bg-card-hover);
     box-shadow: var(--shadow-md);
@@ -707,20 +782,6 @@ body.light .sun-icon {
     background: var(--text-muted);
 }
 
-/* Agent Stats - Compact version below host stats */
-.agent-stats-compact {
-    max-width: 1400px;
-    margin: -1rem auto 1.5rem;
-    padding: 0 2rem;
-}
-
-.agent-stats-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    justify-content: center;
-}
-
 .agent-stat-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -731,8 +792,8 @@ body.light .sun-icon {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    min-width: 200px;
-    max-width: 280px;
+    width: 100%;
+    min-width: 0;
 }
 
 .agent-stat-card:hover {
@@ -762,15 +823,18 @@ body.light .sun-icon {
 
 .agent-stats-values {
     display: flex;
-    gap: 0.75rem;
+    flex-wrap: wrap;
+    column-gap: 0.75rem;
+    row-gap: 0.4rem;
     align-items: center;
 }
 
 .agent-stat-item {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.125rem;
+    min-width: 60px;
 }
 
 .agent-stat-label {
@@ -784,21 +848,30 @@ body.light .sun-icon {
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-primary);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.2rem;
+    white-space: nowrap;
 }
 
 .agent-stat-value .stat-unit {
     font-size: 0.65rem;
     color: var(--text-secondary);
-    margin-left: 0.125rem;
+    margin-left: 0;
 }
 
 /* Responsive adjustments for agent stats */
 @media (max-width: 768px) {
-    .agent-stats-compact {
-        padding: 0 1rem;
-        margin: -0.5rem auto 1rem;
+    .details-panel {
+        right: auto;
+        left: 0;
+        position: fixed;
+        top: auto;
+        bottom: 6rem;
+        margin: 0 1rem;
+        width: calc(100vw - 2rem);
     }
-    
+
     .agent-stat-card {
         min-width: 160px;
         padding: 0.4rem 0.6rem;
@@ -818,5 +891,3 @@ body.light .sun-icon {
         font-size: 0.8rem;
     }
 }
-
-
