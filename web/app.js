@@ -34,14 +34,12 @@ const ICON_OPTIONS = Object.keys(ICONS);
 // State
 let apps = [];
 let stats = { cpu: null, ram: null, temp: null, netTx: null, netRx: null };
-let agentStats = [];
 let config = { timeFormat24h: false, showCPU: true, showRAM: true, showTemp: true, showNetTX: true, showNetRX: true };
 let selectedIndex = -1;
 let filteredResults = [];
 const HISTORY_WINDOW_MS = 5 * 60 * 1000;
 const history = {
-    host: { cpu: [], ram: [], temp: [], netTx: [], netRx: [] },
-    agents: new Map()
+    host: { cpu: [], ram: [], temp: [], netTx: [], netRx: [] }
 };
 
 
@@ -577,15 +575,6 @@ function connectSSE() {
         }
     });
     
-    es.addEventListener('agentstats', (e) => {
-        try {
-            agentStats = JSON.parse(e.data);
-            renderAgentStats(agentStats);
-        } catch (err) {
-            console.error('Failed to parse agentstats event:', err);
-        }
-    });
-    
     es.onerror = () => {
         console.log('SSE connection lost, reconnecting...');
     };
@@ -709,7 +698,7 @@ function applyStatsVisibility() {
     if (hostTxCard) hostTxCard.style.display = config.showNetTX ? '' : 'none';
     if (hostRxCard) hostRxCard.style.display = config.showNetRX ? '' : 'none';
     if (statsDetailsEl) {
-        const showDetails = (config.showNetTX || config.showNetRX) || (agentStats && agentStats.length > 0);
+        const showDetails = config.showNetTX || config.showNetRX;
         statsDetailsEl.style.display = showDetails ? '' : 'none';
     }
 }
@@ -721,112 +710,6 @@ function applyEditVisibility() {
         closeEditMode();
     } else {
         editBtn.style.display = '';
-    }
-}
-
-function renderAgentStats(agents) {
-    const agentStatsEl = document.getElementById('agentStats');
-    const detailsAgentsEl = document.getElementById('detailsAgents');
-    
-    if (!agents || agents.length === 0) {
-        agentStatsEl.style.display = 'none';
-        if (detailsAgentsEl) {
-            detailsAgentsEl.style.display = 'none';
-        }
-        if (statsDetailsEl && !(config.showNetTX || config.showNetRX)) {
-            statsDetailsEl.style.display = 'none';
-        }
-        return;
-    }
-    
-    agentStatsEl.style.display = 'block';
-    
-    const now = Date.now();
-    let html = '<div class="agent-stats-grid">';
-    
-    agents.forEach(agent => {
-        const hasError = agent.error && agent.error !== '';
-        const statusClass = hasError ? 'error' : 'ok';
-        
-        // Format stat values with null handling
-        const cpuValue = agent.stats.cpu !== null && agent.stats.cpu !== undefined ? agent.stats.cpu.toFixed(0) : '--';
-        const ramValue = agent.stats.ram !== null && agent.stats.ram !== undefined ? agent.stats.ram.toFixed(0) : '--';
-        const tempValue = agent.stats.temp !== null && agent.stats.temp !== undefined ? agent.stats.temp.toFixed(0) : '--';
-        const netTxValue = agent.stats.netTx !== null && agent.stats.netTx !== undefined ? formatNetValue(agent.stats.netTx) : null;
-        const netRxValue = agent.stats.netRx !== null && agent.stats.netRx !== undefined ? formatNetValue(agent.stats.netRx) : null;
-        const agentHistory = getAgentHistory(agent);
-        pushHistory(agentHistory.cpu, now, agent.stats.cpu);
-        pushHistory(agentHistory.ram, now, agent.stats.ram);
-        pushHistory(agentHistory.temp, now, agent.stats.temp);
-        pushHistory(agentHistory.netTx, now, agent.stats.netTx);
-        pushHistory(agentHistory.netRx, now, agent.stats.netRx);
-        pruneHistory(agentHistory.cpu, now);
-        pruneHistory(agentHistory.ram, now);
-        pruneHistory(agentHistory.temp, now);
-        pruneHistory(agentHistory.netTx, now);
-        pruneHistory(agentHistory.netRx, now);
-        const cpuSpark = renderSparkline(agentHistory.cpu, { min: 0, max: 100, strokeWidth: 1.5 });
-        const ramSpark = renderSparkline(agentHistory.ram, { min: 0, max: 100, strokeWidth: 1.5 });
-        const tempSpark = renderSparkline(agentHistory.temp, { strokeWidth: 1.5 });
-        const txSpark = renderSparkline(agentHistory.netTx, { strokeWidth: 1.5 });
-        const rxSpark = renderSparkline(agentHistory.netRx, { strokeWidth: 1.5 });
-        
-        html += `
-            <div class="agent-stat-card ${statusClass}">
-                <div class="agent-name">${escapeHtml(agent.name)}</div>
-                ${hasError ? 
-                    `<div class="agent-error">${escapeHtml(agent.error)}</div>` :
-                    `<div class="agent-stats-values">
-                        <div class="agent-stat-item">
-                            <div class="sparkline-card agent">
-                                <div class="sparkline-label">CPU</div>
-                                <div class="sparkline-value">${cpuValue !== '--' ? `${cpuValue}%` : '--'}</div>
-                                <div class="sparkline small">${cpuSpark || ''}</div>
-                            </div>
-                        </div>
-                        <div class="agent-stat-item">
-                            <div class="sparkline-card agent">
-                                <div class="sparkline-label">RAM</div>
-                                <div class="sparkline-value">${ramValue !== '--' ? `${ramValue}%` : '--'}</div>
-                                <div class="sparkline small">${ramSpark || ''}</div>
-                            </div>
-                        </div>
-                        <div class="agent-stat-item">
-                            <div class="sparkline-card agent">
-                                <div class="sparkline-label">Temp</div>
-                                <div class="sparkline-value">${tempValue !== '--' ? `${tempValue}°C` : '--'}</div>
-                                <div class="sparkline small">${tempSpark || ''}</div>
-                            </div>
-                        </div>
-                        ${netTxValue ? `
-                        <div class="agent-stat-item">
-                            <div class="sparkline-card agent">
-                                <div class="sparkline-label">TX</div>
-                                <div class="sparkline-value">${netTxValue.value}${netTxValue.unit}</div>
-                                <div class="sparkline small">${txSpark || ''}</div>
-                            </div>
-                        </div>` : ''}
-                        ${netRxValue ? `
-                        <div class="agent-stat-item">
-                            <div class="sparkline-card agent">
-                                <div class="sparkline-label">RX</div>
-                                <div class="sparkline-value">${netRxValue.value}${netRxValue.unit}</div>
-                                <div class="sparkline small">${rxSpark || ''}</div>
-                            </div>
-                        </div>` : ''}
-                    </div>`
-                }
-            </div>
-        `;
-    });
-    
-    html += '</div>';
-    agentStatsEl.innerHTML = html;
-    if (detailsAgentsEl) {
-        detailsAgentsEl.style.display = '';
-    }
-    if (statsDetailsEl) {
-        statsDetailsEl.style.display = '';
     }
 }
 
@@ -846,13 +729,6 @@ function initSparklineCleanup() {
         pruneHistory(history.host.temp, now);
         pruneHistory(history.host.netTx, now);
         pruneHistory(history.host.netRx, now);
-        history.agents.forEach((agentHistory, key) => {
-            pruneHistory(agentHistory.cpu, now);
-            pruneHistory(agentHistory.ram, now);
-            pruneHistory(agentHistory.temp, now);
-            pruneHistory(agentHistory.netTx, now);
-            pruneHistory(agentHistory.netRx, now);
-        });
     }, 10000);
 }
 
@@ -865,14 +741,6 @@ function pruneHistory(list, now) {
     while (list.length && list[0].t < cutoff) {
         list.shift();
     }
-}
-
-function getAgentHistory(agent) {
-    const key = agent.name || agent.id || agent.host || JSON.stringify(agent);
-    if (!history.agents.has(key)) {
-        history.agents.set(key, { cpu: [], ram: [], temp: [], netTx: [], netRx: [] });
-    }
-    return history.agents.get(key);
 }
 
 function renderHostSparklines() {

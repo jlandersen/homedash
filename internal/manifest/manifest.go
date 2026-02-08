@@ -21,14 +21,8 @@ type App struct {
 	SkipCheck bool   `yaml:"skip_check,omitempty" json:"skipCheck,omitempty"`
 }
 
-type Agent struct {
-	Name string `yaml:"name" json:"name"`
-	URL  string `yaml:"url" json:"url"`
-}
-
 type Manifest struct {
-	Apps   []App   `yaml:"apps" json:"apps"`
-	Agents []Agent `yaml:"agents,omitempty" json:"agents,omitempty"`
+	Apps []App `yaml:"apps" json:"apps"`
 }
 
 type Manager struct {
@@ -50,7 +44,7 @@ func (m *Manager) Load() error {
 	data, err := os.ReadFile(m.path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			manifest := Manifest{Apps: []App{}, Agents: []Agent{}}
+			manifest := Manifest{Apps: []App{}}
 			if err := m.writeManifestFile(&manifest); err != nil {
 				return err
 			}
@@ -64,7 +58,7 @@ func (m *Manager) Load() error {
 	}
 
 	if len(bytes.TrimSpace(data)) == 0 {
-		manifest := Manifest{Apps: []App{}, Agents: []Agent{}}
+		manifest := Manifest{Apps: []App{}}
 		m.mu.Lock()
 		m.manifest = &manifest
 		m.mu.Unlock()
@@ -102,19 +96,8 @@ func (m *Manager) GetManifest() Manifest {
 
 	apps := make([]App, len(m.manifest.Apps))
 	copy(apps, m.manifest.Apps)
-	agents := make([]Agent, len(m.manifest.Agents))
-	copy(agents, m.manifest.Agents)
 
-	return Manifest{Apps: apps, Agents: agents}
-}
-
-func (m *Manager) GetAgents() []Agent {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	agents := make([]Agent, len(m.manifest.Agents))
-	copy(agents, m.manifest.Agents)
-	return agents
+	return Manifest{Apps: apps}
 }
 
 func (m *Manager) Save(manifest *Manifest) error {

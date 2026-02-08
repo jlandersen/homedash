@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"homedash/internal/agentstats"
 	"homedash/internal/health"
 	"homedash/internal/manifest"
 	"homedash/internal/stats"
@@ -27,23 +26,21 @@ type UIConfig struct {
 }
 
 type Handler struct {
-	checker    *health.Checker
-	stats      *stats.Collector
-	agentStats *agentstats.Collector
-	manifest   *manifest.Manager
-	uiConfig   UIConfig
-	clients    map[chan []byte]bool
-	clientsMu  sync.RWMutex
+	checker   *health.Checker
+	stats     *stats.Collector
+	manifest  *manifest.Manager
+	uiConfig  UIConfig
+	clients   map[chan []byte]bool
+	clientsMu sync.RWMutex
 }
 
-func NewHandler(checker *health.Checker, statsCollector *stats.Collector, agentStatsCollector *agentstats.Collector, manifestMgr *manifest.Manager, uiConfig UIConfig) *Handler {
+func NewHandler(checker *health.Checker, statsCollector *stats.Collector, manifestMgr *manifest.Manager, uiConfig UIConfig) *Handler {
 	return &Handler{
-		checker:    checker,
-		stats:      statsCollector,
-		agentStats: agentStatsCollector,
-		manifest:   manifestMgr,
-		uiConfig:   uiConfig,
-		clients:    make(map[chan []byte]bool),
+		checker:  checker,
+		stats:    statsCollector,
+		manifest: manifestMgr,
+		uiConfig: uiConfig,
+		clients:  make(map[chan []byte]bool),
 	}
 }
 
@@ -61,10 +58,6 @@ func (h *Handler) handleApps(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	if h.checker == nil {
-		http.Error(w, "Apps not available in agent mode", http.StatusNotFound)
-		return
-	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -76,10 +69,6 @@ func (h *Handler) handleApps(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) handleManifest(w http.ResponseWriter, r *http.Request) {
-	if h.manifest == nil {
-		http.Error(w, "Manifest not available in agent mode", http.StatusNotFound)
-		return
-	}
 	if !h.uiConfig.AllowEdit {
 		http.Error(w, "Editing is disabled", http.StatusForbidden)
 		return
@@ -127,8 +116,7 @@ func (h *Handler) handleManifest(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		current := h.manifest.GetManifest()
-		updated := manifest.Manifest{Apps: apps, Agents: current.Agents}
+		updated := manifest.Manifest{Apps: apps}
 		if err := h.manifest.Save(&updated); err != nil {
 			log.Printf("Error saving manifest: %v", err)
 			http.Error(w, "Failed to save manifest", http.StatusInternalServerError)
@@ -206,7 +194,6 @@ func (h *Handler) handleSSE(w http.ResponseWriter, r *http.Request) {
 	h.sendConfigToClient(w, flusher)
 	h.sendAppsToClient(w, flusher)
 	h.sendStatsToClient(w, flusher)
-	h.sendAgentStatsToClient(w, flusher)
 
 	statsTicker := time.NewTicker(2 * time.Second)
 	defer statsTicker.Stop()
@@ -220,7 +207,6 @@ func (h *Handler) handleSSE(w http.ResponseWriter, r *http.Request) {
 			flusher.Flush()
 		case <-statsTicker.C:
 			h.sendStatsToClient(w, flusher)
-			h.sendAgentStatsToClient(w, flusher)
 		}
 	}
 }
@@ -254,20 +240,6 @@ func (h *Handler) sendStatsToClient(w http.ResponseWriter, flusher http.Flusher)
 		return
 	}
 	fmt.Fprintf(w, "event: stats\ndata: %s\n\n", data)
-	flusher.Flush()
-}
-
-func (h *Handler) sendAgentStatsToClient(w http.ResponseWriter, flusher http.Flusher) {
-	if h.agentStats == nil {
-		return
-	}
-	agentStats := h.agentStats.Get()
-	data, err := json.Marshal(agentStats)
-	if err != nil {
-		log.Printf("Error marshaling agent stats: %v", err)
-		return
-	}
-	fmt.Fprintf(w, "event: agentstats\ndata: %s\n\n", data)
 	flusher.Flush()
 }
 
