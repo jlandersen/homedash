@@ -36,6 +36,11 @@ let agentStats = [];
 let config = { timeFormat24h: false, showCPU: true, showRAM: true, showTemp: true, showNetTX: true, showNetRX: true };
 let selectedIndex = -1;
 let filteredResults = [];
+const HISTORY_WINDOW_MS = 5 * 60 * 1000;
+const history = {
+    host: { cpu: [], ram: [], temp: [], netTx: [], netRx: [] },
+    agents: new Map()
+};
 
 
 let clockEl, dateEl, appGridEl, searchBtn, themeBtn, commandPalette, searchInput, searchResults, statsDetailsEl;
@@ -56,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCommandPalette();
     initKeyboardShortcuts();
     initStatsDetails();
+    initSparklineCleanup();
     
     fetchApps();
     connectSSE();
@@ -421,6 +427,18 @@ function renderAppCard(app) {
 }
 
 function renderStats(s) {
+    const now = Date.now();
+    pushHistory(history.host.cpu, now, s.cpu);
+    pushHistory(history.host.ram, now, s.ram);
+    pushHistory(history.host.temp, now, s.temp);
+    pushHistory(history.host.netTx, now, s.netTx);
+    pushHistory(history.host.netRx, now, s.netRx);
+    pruneHistory(history.host.cpu, now);
+    pruneHistory(history.host.ram, now);
+    pruneHistory(history.host.temp, now);
+    pruneHistory(history.host.netTx, now);
+    pruneHistory(history.host.netRx, now);
+    renderHostSparklines();
     if (config.showCPU) {
         document.getElementById('cpu-value').textContent = s.cpu !== null ? s.cpu.toFixed(0) : '--';
     }
@@ -430,38 +448,17 @@ function renderStats(s) {
     if (config.showTemp) {
         document.getElementById('temp-value').textContent = s.temp !== null ? s.temp.toFixed(0) : '--';
     }
-    if (config.showNetTX) {
-        if (s.netTx === null) {
-            document.getElementById('net-tx-value').textContent = '--';
-            document.getElementById('stat-net-tx').querySelector('.stat-unit').textContent = 'KB/s';
-        } else {
-            const formatted = formatNetValue(s.netTx);
-            document.getElementById('net-tx-value').textContent = formatted.value;
-            document.getElementById('stat-net-tx').querySelector('.stat-unit').textContent = formatted.unit;
-        }
-    }
-    if (config.showNetRX) {
-        if (s.netRx === null) {
-            document.getElementById('net-rx-value').textContent = '--';
-            document.getElementById('stat-net-rx').querySelector('.stat-unit').textContent = 'KB/s';
-        } else {
-            const formatted = formatNetValue(s.netRx);
-            document.getElementById('net-rx-value').textContent = formatted.value;
-            document.getElementById('stat-net-rx').querySelector('.stat-unit').textContent = formatted.unit;
-        }
-    }
+    updateHostTrendValues(s);
 }
 
 function applyStatsVisibility() {
     document.getElementById('stat-cpu').style.display = config.showCPU ? '' : 'none';
     document.getElementById('stat-ram').style.display = config.showRAM ? '' : 'none';
     document.getElementById('stat-temp').style.display = config.showTemp ? '' : 'none';
-    document.getElementById('stat-net-tx').style.display = config.showNetTX ? '' : 'none';
-    document.getElementById('stat-net-rx').style.display = config.showNetRX ? '' : 'none';
-    const detailsNetworkEl = document.getElementById('detailsNetwork');
-    if (detailsNetworkEl) {
-        detailsNetworkEl.style.display = (config.showNetTX || config.showNetRX) ? '' : 'none';
-    }
+    const hostTxCard = document.getElementById('host-tx-card');
+    const hostRxCard = document.getElementById('host-rx-card');
+    if (hostTxCard) hostTxCard.style.display = config.showNetTX ? '' : 'none';
+    if (hostRxCard) hostRxCard.style.display = config.showNetRX ? '' : 'none';
     if (statsDetailsEl) {
         const showDetails = (config.showNetTX || config.showNetRX) || (agentStats && agentStats.length > 0);
         statsDetailsEl.style.display = showDetails ? '' : 'none';
@@ -485,6 +482,7 @@ function renderAgentStats(agents) {
     
     agentStatsEl.style.display = 'block';
     
+    const now = Date.now();
     let html = '<div class="agent-stats-grid">';
     
     agents.forEach(agent => {
@@ -497,6 +495,22 @@ function renderAgentStats(agents) {
         const tempValue = agent.stats.temp !== null && agent.stats.temp !== undefined ? agent.stats.temp.toFixed(0) : '--';
         const netTxValue = agent.stats.netTx !== null && agent.stats.netTx !== undefined ? formatNetValue(agent.stats.netTx) : null;
         const netRxValue = agent.stats.netRx !== null && agent.stats.netRx !== undefined ? formatNetValue(agent.stats.netRx) : null;
+        const agentHistory = getAgentHistory(agent);
+        pushHistory(agentHistory.cpu, now, agent.stats.cpu);
+        pushHistory(agentHistory.ram, now, agent.stats.ram);
+        pushHistory(agentHistory.temp, now, agent.stats.temp);
+        pushHistory(agentHistory.netTx, now, agent.stats.netTx);
+        pushHistory(agentHistory.netRx, now, agent.stats.netRx);
+        pruneHistory(agentHistory.cpu, now);
+        pruneHistory(agentHistory.ram, now);
+        pruneHistory(agentHistory.temp, now);
+        pruneHistory(agentHistory.netTx, now);
+        pruneHistory(agentHistory.netRx, now);
+        const cpuSpark = renderSparkline(agentHistory.cpu, { min: 0, max: 100 });
+        const ramSpark = renderSparkline(agentHistory.ram, { min: 0, max: 100 });
+        const tempSpark = renderSparkline(agentHistory.temp);
+        const txSpark = renderSparkline(agentHistory.netTx);
+        const rxSpark = renderSparkline(agentHistory.netRx);
         
         html += `
             <div class="agent-stat-card ${statusClass}">
@@ -507,24 +521,29 @@ function renderAgentStats(agents) {
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">CPU</span>
                             <span class="agent-stat-value">${cpuValue}<span class="stat-unit">%</span></span>
+                            ${cpuSpark ? `<div class="sparkline small">${cpuSpark}</div>` : ''}
                         </div>
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">RAM</span>
                             <span class="agent-stat-value">${ramValue}<span class="stat-unit">%</span></span>
+                            ${ramSpark ? `<div class="sparkline small">${ramSpark}</div>` : ''}
                         </div>
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">Temp</span>
                             <span class="agent-stat-value">${tempValue}<span class="stat-unit">°C</span></span>
+                            ${tempSpark ? `<div class="sparkline small">${tempSpark}</div>` : ''}
                         </div>
                         ${netTxValue ? `
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">TX</span>
                             <span class="agent-stat-value">${netTxValue.value}<span class="stat-unit">${netTxValue.unit}</span></span>
+                            ${txSpark ? `<div class="sparkline small">${txSpark}</div>` : ''}
                         </div>` : ''}
                         ${netRxValue ? `
                         <div class="agent-stat-item">
                             <span class="agent-stat-label">RX</span>
                             <span class="agent-stat-value">${netRxValue.value}<span class="stat-unit">${netRxValue.unit}</span></span>
+                            ${rxSpark ? `<div class="sparkline small">${rxSpark}</div>` : ''}
                         </div>` : ''}
                     </div>`
                 }
@@ -548,6 +567,92 @@ function formatNetValue(value) {
         return { value: (value / 1024).toFixed(1), unit: 'MB/s' };
     }
     return { value: value.toFixed(1), unit: 'KB/s' };
+}
+
+function initSparklineCleanup() {
+    setInterval(() => {
+        const now = Date.now();
+        pruneHistory(history.host.cpu, now);
+        pruneHistory(history.host.ram, now);
+        pruneHistory(history.host.temp, now);
+        pruneHistory(history.host.netTx, now);
+        pruneHistory(history.host.netRx, now);
+        history.agents.forEach((agentHistory, key) => {
+            pruneHistory(agentHistory.cpu, now);
+            pruneHistory(agentHistory.ram, now);
+            pruneHistory(agentHistory.temp, now);
+            pruneHistory(agentHistory.netTx, now);
+            pruneHistory(agentHistory.netRx, now);
+        });
+    }, 10000);
+}
+
+function pushHistory(list, timestamp, value) {
+    list.push({ t: timestamp, v: value });
+}
+
+function pruneHistory(list, now) {
+    const cutoff = now - HISTORY_WINDOW_MS;
+    while (list.length && list[0].t < cutoff) {
+        list.shift();
+    }
+}
+
+function getAgentHistory(agent) {
+    const key = agent.name || agent.id || agent.host || JSON.stringify(agent);
+    if (!history.agents.has(key)) {
+        history.agents.set(key, { cpu: [], ram: [], temp: [], netTx: [], netRx: [] });
+    }
+    return history.agents.get(key);
+}
+
+function renderHostSparklines() {
+    const cpuEl = document.getElementById('host-cpu-spark');
+    const ramEl = document.getElementById('host-ram-spark');
+    const tempEl = document.getElementById('host-temp-spark');
+    const txEl = document.getElementById('host-tx-spark');
+    const rxEl = document.getElementById('host-rx-spark');
+    if (cpuEl) cpuEl.innerHTML = renderSparkline(history.host.cpu, { min: 0, max: 100 }) || '';
+    if (ramEl) ramEl.innerHTML = renderSparkline(history.host.ram, { min: 0, max: 100 }) || '';
+    if (tempEl) tempEl.innerHTML = renderSparkline(history.host.temp) || '';
+    if (txEl) txEl.innerHTML = renderSparkline(history.host.netTx) || '';
+    if (rxEl) rxEl.innerHTML = renderSparkline(history.host.netRx) || '';
+}
+
+function updateHostTrendValues(s) {
+    const cpuEl = document.getElementById('host-cpu-value');
+    const ramEl = document.getElementById('host-ram-value');
+    const tempEl = document.getElementById('host-temp-value');
+    const txEl = document.getElementById('host-tx-value');
+    const rxEl = document.getElementById('host-rx-value');
+    if (cpuEl) cpuEl.textContent = s.cpu !== null && s.cpu !== undefined ? `${s.cpu.toFixed(0)}%` : '--';
+    if (ramEl) ramEl.textContent = s.ram !== null && s.ram !== undefined ? `${s.ram.toFixed(0)}%` : '--';
+    if (tempEl) tempEl.textContent = s.temp !== null && s.temp !== undefined ? `${s.temp.toFixed(0)}°C` : '--';
+    if (txEl) {
+        const formatted = s.netTx !== null && s.netTx !== undefined ? formatNetValue(s.netTx) : null;
+        txEl.textContent = formatted ? `${formatted.value}${formatted.unit}` : '--';
+    }
+    if (rxEl) {
+        const formatted = s.netRx !== null && s.netRx !== undefined ? formatNetValue(s.netRx) : null;
+        rxEl.textContent = formatted ? `${formatted.value}${formatted.unit}` : '--';
+    }
+}
+
+function renderSparkline(series, options = {}) {
+    const points = series.filter(point => point.v !== null && point.v !== undefined);
+    if (points.length < 2) return '';
+    const minVal = options.min !== undefined ? options.min : Math.min(...points.map(p => p.v));
+    const maxVal = options.max !== undefined ? options.max : Math.max(...points.map(p => p.v));
+    const span = maxVal - minVal || 1;
+    const width = 120;
+    const height = 28;
+    const step = width / (points.length - 1);
+    const path = points.map((point, index) => {
+        const x = index * step;
+        const y = height - ((point.v - minVal) / span) * height;
+        return `${index === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    return `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
 function escapeHtml(text) {

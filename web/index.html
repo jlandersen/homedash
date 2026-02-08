@@ -51,26 +51,33 @@
                 </div>
                 <div class="stats-details" id="statsDetails" style="display: none;">
                     <div class="details-panel" id="detailsPanel">
-                        <div class="details-section" id="detailsNetwork">
-                            <div class="details-title">Network</div>
-                            <div class="details-stats">
-                                <div class="stat-card" id="stat-net-tx">
-                                    <div class="stat-icon net-tx-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
-                                    </div>
-                                    <div class="stat-info">
-                                        <span class="stat-label">TX</span>
-                                        <span class="stat-value"><span id="net-tx-value">--</span><span class="stat-unit">KB/s</span></span>
-                                    </div>
+                        <div class="details-section" id="detailsHostTrends">
+                            <div class="details-title">Host Trends (5m)</div>
+                            <div class="details-trends">
+                                <div class="sparkline-card">
+                                    <div class="sparkline-label">CPU</div>
+                                    <div class="sparkline-value" id="host-cpu-value">--</div>
+                                    <div class="sparkline" id="host-cpu-spark"></div>
                                 </div>
-                                <div class="stat-card" id="stat-net-rx">
-                                    <div class="stat-icon net-rx-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
-                                    </div>
-                                    <div class="stat-info">
-                                        <span class="stat-label">RX</span>
-                                        <span class="stat-value"><span id="net-rx-value">--</span><span class="stat-unit">KB/s</span></span>
-                                    </div>
+                                <div class="sparkline-card">
+                                    <div class="sparkline-label">RAM</div>
+                                    <div class="sparkline-value" id="host-ram-value">--</div>
+                                    <div class="sparkline" id="host-ram-spark"></div>
+                                </div>
+                                <div class="sparkline-card">
+                                    <div class="sparkline-label">Temp</div>
+                                    <div class="sparkline-value" id="host-temp-value">--</div>
+                                    <div class="sparkline" id="host-temp-spark"></div>
+                                </div>
+                                <div class="sparkline-card" id="host-tx-card">
+                                    <div class="sparkline-label">TX</div>
+                                    <div class="sparkline-value" id="host-tx-value">--</div>
+                                    <div class="sparkline" id="host-tx-spark"></div>
+                                </div>
+                                <div class="sparkline-card" id="host-rx-card">
+                                    <div class="sparkline-label">RX</div>
+                                    <div class="sparkline-value" id="host-rx-value">--</div>
+                                    <div class="sparkline" id="host-rx-spark"></div>
                                 </div>
                             </div>
                         </div>
