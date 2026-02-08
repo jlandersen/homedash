@@ -6,9 +6,9 @@ services:
     ports:
       - "9443:8080"
     volumes:
-      - ./apps.yaml:/apps.yaml:ro
+      - ./appdata:/appdata
       - ./ssl:/ssl:ro
     environment:
-      - HOMEDASH_MANIFEST=/apps.yaml
+      - HOMEDASH_MANIFEST=/appdata/apps.yaml
       - HOMEDASH_TLS_CERT=/ssl/cert.pem
       - HOMEDASH_TLS_KEY=/ssl/key.pem

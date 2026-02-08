@@ -60,9 +60,9 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./apps.yaml:/apps.yaml
+      - ./appdata:/appdata
     environment:
-      - HOMEDASH_MANIFEST=/apps.yaml
+      - HOMEDASH_MANIFEST=/appdata/apps.yaml
     restart: unless-stopped
 ```
 
