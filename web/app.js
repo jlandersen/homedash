@@ -36,6 +36,9 @@ let clockEl, dateEl, appGridEl, searchBtn, themeBtn, viewBtn, editBtn, commandPa
 let editModal, editListEl, editSaveBtn, editCancelBtn, editAddBtn;
 let isEditMode = false;
 let editAppsDraft = [];
+let timeFormatter;
+let dateFormatter;
+let lastTimeFormat24h;
 
 document.addEventListener('DOMContentLoaded', () => {
     clockEl = document.getElementById('clock');
@@ -70,18 +73,32 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initClock() {
+    buildClockFormatters();
     updateClock();
     setInterval(updateClock, 1000);
 }
 
-function updateClock() {
-    const now = new Date();
-    clockEl.textContent = now.toLocaleTimeString([], { 
-        hour: '2-digit', 
+function buildClockFormatters() {
+    timeFormatter = new Intl.DateTimeFormat([], {
+        hour: '2-digit',
         minute: '2-digit',
         hour12: !config.timeFormat24h
     });
-    dateEl.textContent = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+    dateFormatter = new Intl.DateTimeFormat([], {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+    });
+    lastTimeFormat24h = config.timeFormat24h;
+}
+
+function updateClock() {
+    const now = new Date();
+    if (!timeFormatter || lastTimeFormat24h !== config.timeFormat24h) {
+        buildClockFormatters();
+    }
+    clockEl.textContent = timeFormatter.format(now);
+    dateEl.textContent = dateFormatter.format(now);
 }
 
 function initTheme() {
@@ -610,6 +627,9 @@ function connectSSE() {
     es.addEventListener('config', (e) => {
         try {
             config = JSON.parse(e.data);
+            if (lastTimeFormat24h !== config.timeFormat24h) {
+                buildClockFormatters();
+            }
             updateClock();
             applyStatsVisibility();
             applyEditVisibility();
