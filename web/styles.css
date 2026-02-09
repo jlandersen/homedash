@@ -994,6 +994,11 @@ body.view-small .app-card-status {
     align-items: start;
 }
 
+.edit-row .danger-button {
+    align-self: center;
+    height: 38px;
+}
+
 .edit-fields {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -1012,6 +1017,8 @@ body.view-small .app-card-status {
 
 .edit-fields input[type="text"] {
     padding: 0.5rem 0.65rem;
+    min-height: 38px;
+    line-height: 1.2;
     border-radius: 0.6rem;
     border: 1px solid var(--border-color);
     background: var(--bg-secondary);
@@ -1021,6 +1028,8 @@ body.view-small .app-card-status {
 
 .edit-fields select {
     padding: 0.5rem 0.65rem;
+    min-height: 38px;
+    line-height: 1.2;
     border-radius: 0.6rem;
     border: 1px solid var(--border-color);
     background: var(--bg-secondary);
@@ -1037,7 +1046,8 @@ body.view-small .app-card-status {
     display: flex;
     align-items: center;
     gap: 0.55rem;
-    padding: 0.5rem 0.65rem;
+    height: 38px;
+    padding: 0 0.65rem;
     border-radius: 0.6rem;
     border: 1px solid var(--border-color);
     background: var(--bg-secondary);
@@ -1177,16 +1187,57 @@ body.view-small .app-card-status {
 }
 
 .checkbox-field {
-    flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.5rem;
     text-transform: none;
     letter-spacing: normal;
     font-size: 0.75rem;
+    text-align: left;
 }
 
-.checkbox-field input {
-    accent-color: var(--accent);
+.checkbox-control {
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-field input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.checkbox-field input[type="checkbox"]::after {
+    content: '';
+    width: 8px;
+    height: 5px;
+    border-left: 2px solid transparent;
+    border-bottom: 2px solid transparent;
+    transform: rotate(-45deg) translateY(-1px);
+    transition: border-color 0.2s;
+}
+
+.checkbox-field input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.checkbox-field input[type="checkbox"]:checked::after {
+    border-color: #fff;
+}
+
+.checkbox-field input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--accent-glow);
+    outline-offset: 2px;
 }
 
 .primary-button,

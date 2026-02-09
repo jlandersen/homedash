@@ -435,8 +435,10 @@ function renderEditList() {
                         </select>
                     </label>
                     <label class="checkbox-field">
-                        <input type="checkbox" data-field="skipCheck" ${app.skipCheck ? 'checked' : ''} />
                         <span>Skip checks</span>
+                        <span class="checkbox-control">
+                            <input type="checkbox" data-field="skipCheck" ${app.skipCheck ? 'checked' : ''} />
+                        </span>
                     </label>
                 </div>
                 <button class="danger-button" data-action="delete">Delete</button>
