@@ -574,6 +574,7 @@ body.light .sun-icon {
 .category-section {
     margin-bottom: 2.5rem;
     animation: fadeIn 0.4s ease-out;
+    overflow: visible;
 }
 
 @keyframes fadeIn {
@@ -607,6 +608,7 @@ body.light .sun-icon {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
+    overflow: visible;
 }
 
 @media (min-width: 480px) {
@@ -651,6 +653,7 @@ body.light .sun-icon {
     transition: all 0.25s ease-out;
     text-decoration: none;
     color: inherit;
+    overflow: visible;
 }
 
 body.view-small .category-section {
@@ -748,6 +751,7 @@ body.view-small .app-card-status {
     background: var(--bg-card-hover);
     border-color: var(--border-hover);
     box-shadow: var(--shadow-lg), 0 0 30px var(--accent-glow);
+    z-index: 5;
 }
 
 .app-card-icon {
@@ -828,6 +832,82 @@ body.view-small .app-card-status {
     font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
     color: var(--text-muted);
     text-transform: uppercase;
+}
+
+/* App Card Notes Tooltip */
+.app-card-notes {
+    position: absolute;
+    bottom: calc(100% + 0.5rem);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-md);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s, visibility 0.15s;
+    z-index: 50;
+    pointer-events: none;
+}
+
+.app-card-notes::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--border-color);
+}
+
+.app-card-notes::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--bg-secondary);
+    z-index: 1;
+}
+
+.app-card.has-notes:hover .app-card-notes {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Small view notes positioning */
+body.view-small .app-card-notes {
+    bottom: auto;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    transform: none;
+}
+
+body.view-small .app-card-notes::after {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: var(--border-color);
+    left: 1rem;
+    transform: none;
+}
+
+body.view-small .app-card-notes::before {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: var(--bg-secondary);
+    left: 1rem;
+    transform: none;
 }
 
 /* Modal / Command Palette */
@@ -975,6 +1055,10 @@ body.view-small .app-card-status {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 0.65rem;
+}
+
+.edit-fields .notes-field {
+    grid-column: 1 / -1;
 }
 
 .edit-fields label {

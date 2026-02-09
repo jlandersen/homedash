@@ -16,6 +16,7 @@ type App struct {
 	URL       string `yaml:"url" json:"url"`
 	Category  string `yaml:"category" json:"category"`
 	Icon      string `yaml:"icon" json:"icon"`
+	Notes     string `yaml:"notes,omitempty" json:"notes,omitempty"`
 	CheckPath string `yaml:"check_path,omitempty" json:"checkPath,omitempty"`
 	CheckType string `yaml:"check_type,omitempty" json:"checkType,omitempty"`
 	SkipCheck bool   `yaml:"skip_check,omitempty" json:"skipCheck,omitempty"`

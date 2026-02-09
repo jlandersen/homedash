@@ -29,6 +29,7 @@ type AppStatus struct {
 	URL      string `json:"url"`
 	Category string `json:"category"`
 	Icon     string `json:"icon"`
+	Notes    string `json:"notes,omitempty"`
 	Status   Status `json:"status"`
 	Ping     string `json:"ping"`
 }
@@ -107,6 +108,7 @@ func (c *Checker) GetStatuses() []AppStatus {
 				URL:      app.URL,
 				Category: app.Category,
 				Icon:     app.Icon,
+				Notes:    app.Notes,
 				Status:   status.Status,
 				Ping:     status.Ping,
 			})
@@ -121,6 +123,7 @@ func (c *Checker) GetStatuses() []AppStatus {
 				URL:      app.URL,
 				Category: app.Category,
 				Icon:     app.Icon,
+				Notes:    app.Notes,
 				Status:   initialStatus,
 				Ping:     "--",
 			})
@@ -177,6 +180,7 @@ func (c *Checker) checkApp(idx int, app manifest.App) {
 		URL:      app.URL,
 		Category: app.Category,
 		Icon:     app.Icon,
+		Notes:    app.Notes,
 		Status:   status,
 		Ping:     ping,
 	}

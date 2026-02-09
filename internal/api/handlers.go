@@ -104,6 +104,7 @@ func (h *Handler) handleManifest(w http.ResponseWriter, r *http.Request) {
 			apps[i].URL = strings.TrimSpace(apps[i].URL)
 			apps[i].Category = strings.TrimSpace(apps[i].Category)
 			apps[i].Icon = strings.TrimSpace(apps[i].Icon)
+			apps[i].Notes = strings.TrimSpace(apps[i].Notes)
 			apps[i].CheckPath = strings.TrimSpace(apps[i].CheckPath)
 			apps[i].CheckType = strings.TrimSpace(apps[i].CheckType)
 			if apps[i].Name == "" || apps[i].URL == "" {

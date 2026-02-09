@@ -371,6 +371,7 @@ async function openEditMode() {
             url: app.url || '',
             category: app.category || '',
             icon: app.icon || '',
+            notes: app.notes || '',
             checkPath: app.checkPath || '',
             checkType: app.checkType || '',
             skipCheck: Boolean(app.skipCheck)
@@ -397,6 +398,7 @@ function addEditRow() {
         url: '',
         category: '',
         icon: '',
+        notes: '',
         checkPath: '',
         checkType: '',
         skipCheck: false
@@ -480,6 +482,10 @@ function renderEditList() {
                             </div>
                         </div>
                     </label>
+                    <label class="notes-field">
+                        <span>Notes</span>
+                        <input type="text" data-field="notes" value="${escapeHtml(app.notes)}" placeholder="Optional description" />
+                    </label>
                     <label>
                         <span>Check path</span>
                         <input type="text" data-field="checkPath" value="${escapeHtml(app.checkPath)}" placeholder="/" />
@@ -512,6 +518,7 @@ async function saveEditMode() {
             url: app.url || '',
             category: app.category || '',
             icon: app.icon || '',
+            notes: app.notes || '',
             checkPath: app.checkPath || '',
             checkType: app.checkType || '',
             skipCheck: Boolean(app.skipCheck)
@@ -779,15 +786,17 @@ function renderAppCard(app) {
     const icon = renderIcon(iconId);
     const statusClass = app.status === 'UP' ? 'up' : app.status === 'DOWN' ? 'down' : app.status === 'SKIPPED' ? 'skipped' : '';
     const appId = btoa(app.name + '|' + app.url).replace(/[^a-zA-Z0-9]/g, '');
+    const notesTooltip = app.notes ? `<div class="app-card-notes">${escapeHtml(app.notes)}</div>` : '';
     
     return `
-        <a class="app-card" data-app-id="${appId}" href="${escapeHtml(app.url)}" target="_blank" rel="noopener noreferrer">
+        <a class="app-card${app.notes ? ' has-notes' : ''}" data-app-id="${appId}" href="${escapeHtml(app.url)}" target="_blank" rel="noopener noreferrer">
             <div class="app-card-icon">${icon}</div>
             <div class="app-card-name">${escapeHtml(app.name)}</div>
             <div class="app-card-status">
                 <div class="status-dot ${statusClass}"></div>
                 <span class="status-text">${app.status}</span>
             </div>
+            ${notesTooltip}
         </a>
     `;
 }
