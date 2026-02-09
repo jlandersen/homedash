@@ -1028,6 +1028,144 @@ body.view-small .app-card-status {
     font-size: 0.85rem;
 }
 
+.icon-select {
+    position: relative;
+}
+
+.icon-select-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.icon-select-button:focus {
+    outline: 2px solid var(--accent-glow);
+    border-color: var(--accent);
+}
+
+.icon-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 0.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.icon-preview .app-icon {
+    width: 16px;
+    height: 16px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.icon-label {
+    flex: 1;
+    min-width: 0;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.icon-caret {
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.icon-select-menu {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    right: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 0.4rem;
+    box-shadow: var(--shadow-md);
+    display: none;
+    z-index: 15;
+}
+
+.icon-select.open .icon-select-menu {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.icon-option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 0.55rem;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.icon-option:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-color);
+}
+
+.icon-option[aria-selected="true"] {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+.icon-option-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 0.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.icon-option-icon .app-icon {
+    width: 16px;
+    height: 16px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.icon-option-label {
+    font-size: 0.8rem;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
 .edit-fields input[type="text"]:focus {
     outline: 2px solid var(--accent-glow);
     border-color: var(--accent);

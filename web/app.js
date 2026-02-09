@@ -202,16 +202,60 @@ function initEditMode() {
     });
 
     editListEl.addEventListener('click', (e) => {
+        const option = e.target.closest('.icon-option');
+        if (option) {
+            const row = option.closest('[data-edit-index]');
+            if (!row) return;
+            const index = Number(row.dataset.editIndex);
+            if (Number.isNaN(index)) return;
+            const value = option.dataset.value || '';
+            editAppsDraft[index].icon = value;
+            row.dataset.dirty = 'true';
+            const select = option.closest('.icon-select');
+            if (select) {
+                const button = select.querySelector('.icon-select-button');
+                const labelEl = button ? button.querySelector('.icon-label') : null;
+                const previewEl = button ? button.querySelector('.icon-preview') : null;
+                if (labelEl) labelEl.textContent = option.dataset.label || '';
+                if (previewEl) previewEl.innerHTML = renderIcon(option.dataset.icon || 'box');
+                select.classList.remove('open');
+            }
+            return;
+        }
+
         const btn = e.target.closest('[data-action]');
         if (!btn) return;
         const row = btn.closest('[data-edit-index]');
         if (!row) return;
         const index = Number(row.dataset.editIndex);
         if (Number.isNaN(index)) return;
-        if (btn.dataset.action === 'delete') {
+        const action = btn.dataset.action;
+        if (action === 'delete') {
             editAppsDraft.splice(index, 1);
             renderEditList();
         }
+        if (action === 'icon-toggle') {
+            const select = btn.closest('.icon-select');
+            if (!select) return;
+            const shouldOpen = !select.classList.contains('open');
+            editListEl.querySelectorAll('.icon-select.open').forEach((openSelect) => {
+                if (openSelect !== select) openSelect.classList.remove('open');
+            });
+            if (shouldOpen) {
+                select.classList.add('open');
+            } else {
+                select.classList.remove('open');
+            }
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!isEditMode || !editListEl) return;
+        editListEl.querySelectorAll('.icon-select.open').forEach((openSelect) => {
+            if (!openSelect.contains(e.target)) {
+                openSelect.classList.remove('open');
+            }
+        });
     });
 }
 
@@ -328,10 +372,19 @@ function renderEditList() {
     }
 
     editListEl.innerHTML = editAppsDraft.map((app, index) => {
+        const iconSelection = ICON_OPTIONS.includes(app.icon) ? app.icon : '';
+        const selectedLabel = iconSelection ? iconSelection : 'auto (box)';
+        const selectedIconId = iconSelection || 'box';
         const iconOptions = [''].concat(ICON_OPTIONS).map((icon) => {
             const label = icon ? icon : 'auto (box)';
-            const selected = icon === (app.icon || '') ? 'selected' : '';
-            return `<option value="${escapeHtml(icon)}" ${selected}>${escapeHtml(label)}</option>`;
+            const iconId = icon || 'box';
+            const isSelected = icon === iconSelection ? ' aria-selected="true"' : '';
+            return `
+                <button type="button" class="icon-option" data-value="${escapeHtml(icon)}" data-label="${escapeHtml(label)}" data-icon="${escapeHtml(iconId)}"${isSelected}>
+                    <span class="icon-option-icon">${renderIcon(iconId)}</span>
+                    <span class="icon-option-label">${escapeHtml(label)}</span>
+                </button>
+            `;
         }).join('');
         const checkTypeOptions = [
             { value: '', label: 'auto (http)' },
@@ -358,9 +411,18 @@ function renderEditList() {
                     </label>
                     <label>
                         <span>Icon</span>
-                        <select data-field="icon">
-                            ${iconOptions}
-                        </select>
+                        <div class="icon-select" data-field="icon">
+                            <button type="button" class="icon-select-button" data-action="icon-toggle">
+                                <span class="icon-preview">${renderIcon(selectedIconId)}</span>
+                                <span class="icon-label">${escapeHtml(selectedLabel)}</span>
+                                <svg class="icon-caret" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                    <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <div class="icon-select-menu">
+                                ${iconOptions}
+                            </div>
+                        </div>
                     </label>
                     <label>
                         <span>Check path</span>
