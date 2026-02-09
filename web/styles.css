@@ -654,6 +654,7 @@ body.light .sun-icon {
     text-decoration: none;
     color: inherit;
     overflow: visible;
+    z-index: 1;
 }
 
 body.view-small .category-section {
@@ -752,6 +753,10 @@ body.view-small .app-card-status {
     border-color: var(--border-hover);
     box-shadow: var(--shadow-lg), 0 0 30px var(--accent-glow);
     z-index: 5;
+}
+
+.app-card.notes-layer {
+    z-index: 10;
 }
 
 .app-card-icon {
@@ -853,8 +858,8 @@ body.view-small .app-card-status {
     text-overflow: ellipsis;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.15s, visibility 0.15s;
-    z-index: 50;
+    transition: opacity 0.15s, visibility 0s 0.15s;
+    z-index: 100;
     pointer-events: none;
 }
 
@@ -879,9 +884,10 @@ body.view-small .app-card-status {
     z-index: 1;
 }
 
-.app-card.has-notes:hover .app-card-notes {
+.app-card.has-notes.notes-active .app-card-notes {
     opacity: 1;
     visibility: visible;
+    transition: opacity 0.15s, visibility 0s 0s;
 }
 
 /* Small view notes positioning */

@@ -39,6 +39,7 @@ let editAppsDraft = [];
 let timeFormatter;
 let dateFormatter;
 let lastTimeFormat24h;
+const NOTES_DELAY_MS = 1000;
 
 document.addEventListener('DOMContentLoaded', () => {
     clockEl = document.getElementById('clock');
@@ -65,12 +66,57 @@ document.addEventListener('DOMContentLoaded', () => {
     initKeyboardShortcuts();
     initEditMode();
     initStatsDetails();
+    initNotesHover();
     initSparklineCleanup();
     
     fetchApps();
     fetchStatsHistory();
     connectSSE();
 });
+
+function initNotesHover() {
+    if (!appGridEl) return;
+    let hoverTimer;
+
+    const clearHoverTimer = () => {
+        if (hoverTimer) {
+            clearTimeout(hoverTimer);
+            hoverTimer = null;
+        }
+    };
+
+    appGridEl.addEventListener('mouseenter', (event) => {
+        const card = event.target.closest('.app-card.has-notes');
+        if (!card || !appGridEl.contains(card)) return;
+        clearHoverTimer();
+        hoverTimer = setTimeout(() => {
+            card.classList.add('notes-active', 'notes-layer');
+        }, NOTES_DELAY_MS);
+    }, true);
+
+    appGridEl.addEventListener('mouseleave', (event) => {
+        const card = event.target.closest('.app-card.has-notes');
+        if (!card || !appGridEl.contains(card)) return;
+        clearHoverTimer();
+        card.classList.remove('notes-active', 'notes-layer');
+    }, true);
+
+    appGridEl.addEventListener('focusin', (event) => {
+        const card = event.target.closest('.app-card.has-notes');
+        if (!card || !appGridEl.contains(card)) return;
+        clearHoverTimer();
+        hoverTimer = setTimeout(() => {
+            card.classList.add('notes-active', 'notes-layer');
+        }, NOTES_DELAY_MS);
+    });
+
+    appGridEl.addEventListener('focusout', (event) => {
+        const card = event.target.closest('.app-card.has-notes');
+        if (!card || !appGridEl.contains(card)) return;
+        clearHoverTimer();
+        card.classList.remove('notes-active', 'notes-layer');
+    });
+}
 
 function initClock() {
     buildClockFormatters();
