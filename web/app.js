@@ -795,7 +795,7 @@ function renderAppCard(app) {
 function renderIcon(name) {
     return `
         <svg class="app-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-            <use href="icons/${name}.svg#icon"></use>
+            <use href="icons/${name}.svg"></use>
         </svg>
     `;
 }
