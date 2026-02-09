@@ -339,11 +339,6 @@ body {
     width: 18px;
     height: 18px;
     display: block;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 .stat-icon.cpu-icon { color: var(--cpu-color); }
@@ -448,11 +443,6 @@ body {
     width: 18px;
     height: 18px;
     display: block;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 .search-trigger span {
@@ -493,11 +483,6 @@ body {
     width: 18px;
     height: 18px;
     display: block;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 .theme-toggle:hover {
@@ -523,11 +508,6 @@ body {
     width: 18px;
     height: 18px;
     display: block;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 .edit-toggle {
@@ -548,11 +528,6 @@ body {
     width: 18px;
     height: 18px;
     display: block;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 .edit-toggle:hover {
@@ -795,7 +770,9 @@ body.view-small .app-card-status {
     color: var(--accent);
 }
 
-.app-card-icon svg {
+.app-card-icon svg,
+.app-card-icon img,
+.app-card-icon .app-icon {
     width: 24px;
     height: 24px;
 }
@@ -804,11 +781,6 @@ body.view-small .app-card-status {
     width: 24px;
     height: 24px;
     display: block;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 .app-card-name {
@@ -1080,11 +1052,6 @@ body.view-small .app-card-status {
     width: 16px;
     height: 16px;
     display: block;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 .icon-label {
@@ -1163,11 +1130,6 @@ body.view-small .app-card-status {
     width: 16px;
     height: 16px;
     display: block;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 .icon-option-label {
@@ -1353,11 +1315,19 @@ body.view-small .app-card-status {
     width: 18px;
     height: 18px;
     display: block;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+}
+
+.ui-icon,
+.app-icon {
+    background-color: currentColor;
+    mask-image: var(--icon-url);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    -webkit-mask-image: var(--icon-url);
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
 }
 
 .search-result-info {

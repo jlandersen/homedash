@@ -24,9 +24,7 @@
             <div class="stats-section" id="stats">
                 <div class="stat-card" id="stat-cpu">
                     <div class="stat-icon cpu-icon">
-                        <svg class="ui-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-                            <use href="icons/cpu.svg"></use>
-                        </svg>
+                        <span class="ui-icon" aria-hidden="true" style="--icon-url: url('icons/cpu.svg');"></span>
                     </div>
                     <div class="stat-info">
                         <span class="stat-label">CPU</span>
@@ -35,9 +33,7 @@
                 </div>
                 <div class="stat-card" id="stat-ram">
                     <div class="stat-icon ram-icon">
-                        <svg class="ui-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-                            <use href="icons/ram.svg"></use>
-                        </svg>
+                        <span class="ui-icon" aria-hidden="true" style="--icon-url: url('icons/ram.svg');"></span>
                     </div>
                     <div class="stat-info">
                         <span class="stat-label">RAM</span>
@@ -46,9 +42,7 @@
                 </div>
                 <div class="stat-card" id="stat-temp">
                     <div class="stat-icon temp-icon">
-                        <svg class="ui-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-                            <use href="icons/temp.svg"></use>
-                        </svg>
+                        <span class="ui-icon" aria-hidden="true" style="--icon-url: url('icons/temp.svg');"></span>
                     </div>
                     <div class="stat-info">
                         <span class="stat-label">Temp</span>
@@ -95,32 +89,20 @@
         <!-- Search/Action bar -->
         <div class="action-bar">
             <button class="search-trigger" id="searchBtn">
-                <svg class="ui-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-                    <use href="icons/search.svg"></use>
-                </svg>
+                <span class="ui-icon" aria-hidden="true" style="--icon-url: url('icons/search.svg');"></span>
                 <span>Quick launch...</span>
                 <kbd>⌘K</kbd>
             </button>
             <button class="theme-toggle" id="themeBtn" title="Toggle theme">
-                <svg class="sun-icon ui-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-                    <use href="icons/sun.svg"></use>
-                </svg>
-                <svg class="moon-icon ui-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-                    <use href="icons/moon.svg"></use>
-                </svg>
+                <span class="sun-icon ui-icon" aria-hidden="true" style="--icon-url: url('icons/sun.svg');"></span>
+                <span class="moon-icon ui-icon" aria-hidden="true" style="--icon-url: url('icons/moon.svg');"></span>
             </button>
             <button class="view-toggle" id="viewBtn" title="Toggle view">
-                <svg class="cards-icon ui-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-                    <use href="icons/cards.svg"></use>
-                </svg>
-                <svg class="rows-icon ui-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-                    <use href="icons/rows.svg"></use>
-                </svg>
+                <span class="cards-icon ui-icon" aria-hidden="true" style="--icon-url: url('icons/cards.svg');"></span>
+                <span class="rows-icon ui-icon" aria-hidden="true" style="--icon-url: url('icons/rows.svg');"></span>
             </button>
             <button class="edit-toggle" id="editBtn" title="Edit apps">
-                <svg class="ui-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-                    <use href="icons/edit.svg"></use>
-                </svg>
+                <span class="ui-icon" aria-hidden="true" style="--icon-url: url('icons/edit.svg');"></span>
             </button>
         </div>
 
@@ -134,9 +116,7 @@
     <div class="modal-overlay" id="commandPalette">
         <div class="modal">
             <div class="modal-header">
-                <svg class="ui-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-                    <use href="icons/search.svg"></use>
-                </svg>
+                <span class="ui-icon" aria-hidden="true" style="--icon-url: url('icons/search.svg');"></span>
                 <input type="text" id="searchInput" placeholder="Search apps..." autocomplete="off">
                 <kbd>ESC</kbd>
             </div>
