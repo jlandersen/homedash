@@ -335,6 +335,17 @@ body {
     background: var(--bg-card);
 }
 
+.stat-icon .ui-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 .stat-icon.cpu-icon { color: var(--cpu-color); }
 .stat-icon.ram-icon { color: var(--ram-color); }
 .stat-icon.temp-icon { color: var(--temp-color); }
@@ -433,6 +444,17 @@ body {
     flex-shrink: 0;
 }
 
+.search-trigger .ui-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 .search-trigger span {
     flex: 1;
 }
@@ -467,6 +489,17 @@ body {
     transition: all 0.2s;
 }
 
+.theme-toggle .ui-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 .theme-toggle:hover {
     background: var(--bg-card-hover);
     color: var(--accent);
@@ -486,6 +519,17 @@ body {
     transition: all 0.2s;
 }
 
+.view-toggle .ui-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 .edit-toggle {
     display: flex;
     align-items: center;
@@ -498,6 +542,17 @@ body {
     color: var(--text-muted);
     cursor: pointer;
     transition: all 0.2s;
+}
+
+.edit-toggle .ui-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .edit-toggle:hover {
@@ -745,6 +800,17 @@ body.view-small .app-card-status {
     height: 24px;
 }
 
+.app-card-icon .app-icon {
+    width: 24px;
+    height: 24px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 .app-card-name {
     font-size: 0.8rem;
     font-weight: 600;
@@ -850,6 +916,17 @@ body.view-small .app-card-status {
 .modal-header svg {
     flex-shrink: 0;
     color: var(--text-muted);
+}
+
+.modal-header .ui-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .modal-header input {
@@ -1081,6 +1158,17 @@ body.view-small .app-card-status {
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
     font-size: 1.1rem;
+}
+
+.search-result-icon .app-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .search-result-info {
