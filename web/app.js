@@ -199,8 +199,37 @@ function initEditMode() {
         const key = e.target.dataset.field;
         if (!key || Number.isNaN(index)) return;
         if (key === 'skipCheck') return;
+        if (key === 'category' && e.target.dataset.autoCleared === 'true') {
+            delete e.target.dataset.prevValue;
+            delete e.target.dataset.autoCleared;
+        }
         editAppsDraft[index][key] = e.target.value;
         row.dataset.dirty = 'true';
+    });
+
+    editListEl.addEventListener('focusin', (e) => {
+        const input = e.target.closest('input[data-field="category"]');
+        if (!input) return;
+        if (input.value && input.dataset.autoCleared !== 'true') {
+            input.dataset.prevValue = input.value;
+            input.dataset.autoCleared = 'true';
+            input.value = '';
+        }
+    });
+
+    editListEl.addEventListener('focusout', (e) => {
+        const input = e.target.closest('input[data-field="category"]');
+        if (!input || input.dataset.autoCleared !== 'true') return;
+        if (input.value === '' && input.dataset.prevValue !== undefined) {
+            input.value = input.dataset.prevValue;
+            const row = input.closest('[data-edit-index]');
+            const index = row ? Number(row.dataset.editIndex) : NaN;
+            if (!Number.isNaN(index)) {
+                editAppsDraft[index].category = input.value;
+            }
+        }
+        delete input.dataset.prevValue;
+        delete input.dataset.autoCleared;
     });
 
     editListEl.addEventListener('change', (e) => {
@@ -388,6 +417,16 @@ function renderEditList() {
         return;
     }
 
+    const categorySet = new Set();
+    editAppsDraft.forEach((app) => {
+        const value = (app.category || '').trim();
+        if (value) categorySet.add(value);
+    });
+    const categoryOptions = Array.from(categorySet).sort().map((category) => {
+        return `<option value="${escapeHtml(category)}"></option>`;
+    }).join('');
+    const categoryDatalist = `<datalist id="categoryOptions">${categoryOptions}</datalist>`;
+
     editListEl.innerHTML = editAppsDraft.map((app, index) => {
         const iconSelection = ICON_OPTIONS.includes(app.icon) ? app.icon : '';
         const selectedLabel = iconSelection ? iconSelection : 'auto (box)';
@@ -424,7 +463,7 @@ function renderEditList() {
                     </label>
                     <label>
                         <span>Category</span>
-                        <input type="text" data-field="category" value="${escapeHtml(app.category)}" placeholder="Category" />
+                        <input type="text" data-field="category" value="${escapeHtml(app.category)}" placeholder="Category" list="categoryOptions" />
                     </label>
                     <label>
                         <span>Icon</span>
@@ -461,7 +500,7 @@ function renderEditList() {
                 <button class="danger-button" data-action="delete">Delete</button>
             </div>
         `;
-    }).join('');
+    }).join('') + categoryDatalist;
 }
 
 async function saveEditMode() {
