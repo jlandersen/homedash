@@ -31,8 +31,6 @@
     --cpu-color: #34d399;
     --ram-color: #38bdf8;
     --temp-color: #fbbf24;
-    --net-tx-color: #f472b6;
-    --net-rx-color: #a78bfa;
     
     /* Blob colors (dark) */
     --blob-1: rgba(99, 102, 241, 0.15);
@@ -235,28 +233,12 @@ body {
     gap: 0.75rem;
 }
 
-.details-section + .details-section {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
-}
-
 .details-title {
     font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--text-muted);
-}
-
-.details-stats {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.details-stats .stat-card {
-    padding: 0.65rem 0.85rem;
 }
 
 .details-trends {
@@ -306,11 +288,6 @@ body {
     height: 100%;
 }
 
-.sparkline.small {
-    height: 22px;
-    opacity: 0.75;
-}
-
 @media (min-width: 768px) {
     .details-panel {
         width: min(640px, 60vw);
@@ -343,8 +320,6 @@ body {
 .stat-icon.cpu-icon { color: var(--cpu-color); }
 .stat-icon.ram-icon { color: var(--ram-color); }
 .stat-icon.temp-icon { color: var(--temp-color); }
-.stat-icon.net-tx-icon { color: var(--net-tx-color); }
-.stat-icon.net-rx-icon { color: var(--net-rx-color); }
 
 .stat-info {
     display: flex;
@@ -432,10 +407,6 @@ body {
     background: var(--bg-card-hover);
     border-color: var(--border-hover);
     color: var(--text-secondary);
-}
-
-.search-trigger svg {
-    flex-shrink: 0;
 }
 
 .search-trigger .ui-icon {
@@ -673,11 +644,6 @@ body.view-small .app-card-icon {
     background: var(--bg-secondary);
 }
 
-body.view-small .app-card-icon svg {
-    width: 18px;
-    height: 18px;
-}
-
 body.view-small .app-card-name {
     margin-bottom: 0;
     text-align: left;
@@ -733,8 +699,6 @@ body.view-small .app-card-status {
     color: var(--accent);
 }
 
-.app-card-icon svg,
-.app-card-icon img,
 .app-card-icon .app-icon {
     width: 24px;
     height: 24px;
@@ -921,11 +885,6 @@ body.view-small .app-card-notes::before {
     margin-left: auto;
     display: flex;
     gap: 0.5rem;
-}
-
-.modal-header svg {
-    flex-shrink: 0;
-    color: var(--text-muted);
 }
 
 .modal-header .ui-icon {
