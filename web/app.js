@@ -39,7 +39,7 @@ let editAppsDraft = [];
 let timeFormatter;
 let dateFormatter;
 let lastTimeFormat24h;
-const NOTES_DELAY_MS = 1000;
+const NOTES_DELAY_MS = 500;
 
 document.addEventListener('DOMContentLoaded', () => {
     clockEl = document.getElementById('clock');
@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initNotesHover() {
     if (!appGridEl) return;
     let hoverTimer;
+    let activeHoverCard = null;
 
     const clearHoverTimer = () => {
         if (hoverTimer) {
@@ -85,28 +86,37 @@ function initNotesHover() {
         }
     };
 
-    appGridEl.addEventListener('mouseenter', (event) => {
+    appGridEl.addEventListener('mouseover', (event) => {
         const card = event.target.closest('.app-card.has-notes');
         if (!card || !appGridEl.contains(card)) return;
+        if (event.relatedTarget && card.contains(event.relatedTarget)) return;
         clearHoverTimer();
+        activeHoverCard = card;
         hoverTimer = setTimeout(() => {
-            card.classList.add('notes-active', 'notes-layer');
+            if (activeHoverCard === card) {
+                card.classList.add('notes-active', 'notes-layer');
+            }
         }, NOTES_DELAY_MS);
-    }, true);
+    });
 
-    appGridEl.addEventListener('mouseleave', (event) => {
+    appGridEl.addEventListener('mouseout', (event) => {
         const card = event.target.closest('.app-card.has-notes');
         if (!card || !appGridEl.contains(card)) return;
+        if (event.relatedTarget && card.contains(event.relatedTarget)) return;
         clearHoverTimer();
+        if (activeHoverCard === card) activeHoverCard = null;
         card.classList.remove('notes-active', 'notes-layer');
-    }, true);
+    });
 
     appGridEl.addEventListener('focusin', (event) => {
         const card = event.target.closest('.app-card.has-notes');
         if (!card || !appGridEl.contains(card)) return;
         clearHoverTimer();
+        activeHoverCard = card;
         hoverTimer = setTimeout(() => {
-            card.classList.add('notes-active', 'notes-layer');
+            if (activeHoverCard === card) {
+                card.classList.add('notes-active', 'notes-layer');
+            }
         }, NOTES_DELAY_MS);
     });
 
@@ -114,6 +124,7 @@ function initNotesHover() {
         const card = event.target.closest('.app-card.has-notes');
         if (!card || !appGridEl.contains(card)) return;
         clearHoverTimer();
+        if (activeHoverCard === card) activeHoverCard = null;
         card.classList.remove('notes-active', 'notes-layer');
     });
 }
