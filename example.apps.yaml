@@ -17,6 +17,12 @@
 #                           Useful for devices that may wake up (e.g. NAS) or services
 #                           you don't want to monitor
 #
+# Optional top-level fields:
+#
+#   category_order: (optional) List of category names in display order.
+#                   Categories not listed here are shown after these in
+#                   alphabetical order.
+#
 # Available Icons:
 # ----------------
 #   film       - Movie/video icon (for Plex, Jellyfin, Radarr, etc.)
@@ -40,6 +46,14 @@
 #   http  - (default) Sends HTTP GET request, expects 2xx/3xx response
 #   tcp   - Opens TCP connection to host:port, useful for non-HTTP services
 #
+
+category_order:
+  - Smart Home
+  - Media
+  - Network
+  - System
+  - Development
+  - Productivity
 
 apps:
   # ===================

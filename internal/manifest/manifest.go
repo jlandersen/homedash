@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
@@ -23,7 +24,8 @@ type App struct {
 }
 
 type Manifest struct {
-	Apps []App `yaml:"apps" json:"apps"`
+	CategoryOrder []string `yaml:"category_order,omitempty" json:"categoryOrder,omitempty"`
+	Apps          []App    `yaml:"apps" json:"apps"`
 }
 
 type Manager struct {
@@ -197,6 +199,23 @@ func (m *Manager) Close() error {
 func ApplyDefaults(manifest *Manifest) {
 	if manifest == nil {
 		return
+	}
+	if len(manifest.CategoryOrder) > 0 {
+		normalized := make([]string, 0, len(manifest.CategoryOrder))
+		seen := make(map[string]bool, len(manifest.CategoryOrder))
+		for _, category := range manifest.CategoryOrder {
+			trimmed := strings.TrimSpace(category)
+			if trimmed == "" {
+				continue
+			}
+			key := strings.ToLower(trimmed)
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			normalized = append(normalized, trimmed)
+		}
+		manifest.CategoryOrder = normalized
 	}
 	for i := range manifest.Apps {
 		if manifest.Apps[i].Icon == "" {

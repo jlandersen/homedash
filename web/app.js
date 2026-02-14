@@ -781,7 +781,7 @@ function renderApps(appList) {
         groups[app.category].push(app);
     });
     
-    const sortedCategories = Object.keys(groups).sort();
+    const sortedCategories = Object.keys(groups);
     
     let html = '';
     sortedCategories.forEach(category => {

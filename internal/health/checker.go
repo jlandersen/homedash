@@ -8,6 +8,8 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -96,7 +98,8 @@ func (c *Checker) GetStatuses() []AppStatus {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	apps := c.manifest.GetApps()
+	manifestData := c.manifest.GetManifest()
+	apps := manifestData.Apps
 	result := make([]AppStatus, 0, len(apps))
 
 	for i, app := range apps {
@@ -130,7 +133,38 @@ func (c *Checker) GetStatuses() []AppStatus {
 		}
 	}
 
+	sortStatusesByCategory(result, manifestData.CategoryOrder)
+
 	return result
+}
+
+func sortStatusesByCategory(statuses []AppStatus, categoryOrder []string) {
+	orderRank := make(map[string]int, len(categoryOrder))
+	for i, category := range categoryOrder {
+		orderRank[strings.ToLower(strings.TrimSpace(category))] = i
+	}
+
+	sort.SliceStable(statuses, func(i, j int) bool {
+		aCategory := strings.ToLower(strings.TrimSpace(statuses[i].Category))
+		bCategory := strings.ToLower(strings.TrimSpace(statuses[j].Category))
+
+		if len(orderRank) > 0 {
+			aRank, aOrdered := orderRank[aCategory]
+			bRank, bOrdered := orderRank[bCategory]
+
+			if aOrdered && bOrdered && aRank != bRank {
+				return aRank < bRank
+			}
+			if aOrdered != bOrdered {
+				return aOrdered
+			}
+		}
+
+		if aCategory != bCategory {
+			return aCategory < bCategory
+		}
+		return false
+	})
 }
 
 func (c *Checker) checkAll() {

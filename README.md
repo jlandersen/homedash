@@ -150,6 +150,11 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -node
 ### Manifest Format (apps.yaml)
 
 ```yaml
+category_order:
+  - Smart Home
+  - Media
+  - Network
+
 apps:
   - name: Plex
     url: http://192.168.1.100:32400
@@ -169,6 +174,13 @@ apps:
     icon: home
 
 ```
+
+#### Manifest Fields
+
+| Field | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `category_order` | No | - | Ordered list of category names; categories not listed are appended alphabetically |
+| `apps` | Yes | - | List of apps shown on the dashboard |
 
 #### App Fields
 

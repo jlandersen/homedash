@@ -86,7 +86,8 @@ func (h *Handler) handleManifest(w http.ResponseWriter, r *http.Request) {
 		return
 	case http.MethodPut:
 		var payload struct {
-			Apps *[]manifest.App `json:"apps"`
+			Apps          *[]manifest.App `json:"apps"`
+			CategoryOrder *[]string       `json:"categoryOrder"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
@@ -117,7 +118,16 @@ func (h *Handler) handleManifest(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		updated := manifest.Manifest{Apps: apps}
+		existing := h.manifest.GetManifest()
+		updated := manifest.Manifest{
+			Apps:          apps,
+			CategoryOrder: existing.CategoryOrder,
+		}
+		if payload.CategoryOrder != nil {
+			order := make([]string, len(*payload.CategoryOrder))
+			copy(order, *payload.CategoryOrder)
+			updated.CategoryOrder = order
+		}
 		if err := h.manifest.Save(&updated); err != nil {
 			log.Printf("Error saving manifest: %v", err)
 			http.Error(w, "Failed to save manifest", http.StatusInternalServerError)
