@@ -307,7 +307,6 @@ body {
 }
 
 .sparkline.small {
-    color: var(--accent);
     height: 22px;
     opacity: 0.75;
 }
@@ -465,51 +464,8 @@ body {
     }
 }
 
-.theme-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.theme-toggle .ui-icon {
-    width: 18px;
-    height: 18px;
-    display: block;
-}
-
-.theme-toggle:hover {
-    background: var(--bg-card-hover);
-    color: var(--accent);
-}
-
-.view-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.view-toggle .ui-icon {
-    width: 18px;
-    height: 18px;
-    display: block;
-}
-
+.theme-toggle,
+.view-toggle,
 .edit-toggle {
     display: flex;
     align-items: center;
@@ -524,18 +480,17 @@ body {
     transition: all 0.2s;
 }
 
+.theme-toggle .ui-icon,
+.view-toggle .ui-icon,
 .edit-toggle .ui-icon {
     width: 18px;
     height: 18px;
     display: block;
 }
 
+.theme-toggle:hover,
+.view-toggle:hover,
 .edit-toggle:hover {
-    background: var(--bg-card-hover);
-    color: var(--accent);
-}
-
-.view-toggle:hover {
     background: var(--bg-card-hover);
     color: var(--accent);
 }
@@ -670,7 +625,6 @@ body.view-small .category-title {
 }
 
 body.view-small .app-grid {
-    display: grid;
     grid-template-columns: repeat(1, 1fr);
     gap: 0.5rem;
 }
@@ -787,8 +741,6 @@ body.view-small .app-card-status {
 }
 
 .app-card-icon .app-icon {
-    width: 24px;
-    height: 24px;
     display: block;
 }
 
@@ -1077,17 +1029,7 @@ body.view-small .app-card-notes::before {
     color: var(--text-muted);
 }
 
-.edit-fields input[type="text"] {
-    padding: 0.5rem 0.65rem;
-    min-height: 38px;
-    line-height: 1.2;
-    border-radius: 0.6rem;
-    border: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font-size: 0.85rem;
-}
-
+.edit-fields input[type="text"],
 .edit-fields select {
     padding: 0.5rem 0.65rem;
     min-height: 38px;
@@ -1125,7 +1067,8 @@ body.view-small .app-card-notes::before {
     border-color: var(--accent);
 }
 
-.icon-preview {
+.icon-preview,
+.icon-option-icon {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1136,12 +1079,6 @@ body.view-small .app-card-notes::before {
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
     flex-shrink: 0;
-}
-
-.icon-preview .app-icon {
-    width: 16px;
-    height: 16px;
-    display: block;
 }
 
 .icon-label {
@@ -1203,19 +1140,7 @@ body.view-small .app-card-notes::before {
     border-color: rgba(99, 102, 241, 0.4);
 }
 
-.icon-option-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 0.5rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    flex-shrink: 0;
-}
-
+.icon-preview .app-icon,
 .icon-option-icon .app-icon {
     width: 16px;
     height: 16px;
@@ -1228,11 +1153,7 @@ body.view-small .app-card-notes::before {
     letter-spacing: normal;
 }
 
-.edit-fields input[type="text"]:focus {
-    outline: 2px solid var(--accent-glow);
-    border-color: var(--accent);
-}
-
+.edit-fields input[type="text"]:focus,
 .edit-fields select:focus {
     outline: 2px solid var(--accent-glow);
     border-color: var(--accent);
@@ -1377,16 +1298,9 @@ body.view-small .app-card-notes::before {
     transition: background 0.15s;
 }
 
-.search-result:hover {
-    background: var(--bg-card-hover);
-}
-
+.search-result:hover,
 .search-result.selected {
     background: var(--bg-card-hover);
-}
-
-.search-result.selected .search-result-arrow {
-    opacity: 1;
 }
 
 .search-result-icon {
@@ -1442,7 +1356,8 @@ body.view-small .app-card-notes::before {
     transition: opacity 0.15s;
 }
 
-.search-result:hover .search-result-arrow {
+.search-result:hover .search-result-arrow,
+.search-result.selected .search-result-arrow {
     opacity: 1;
 }
 
