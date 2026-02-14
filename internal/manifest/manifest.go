@@ -97,10 +97,16 @@ func (m *Manager) GetManifest() Manifest {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
+	categoryOrder := make([]string, len(m.manifest.CategoryOrder))
+	copy(categoryOrder, m.manifest.CategoryOrder)
+
 	apps := make([]App, len(m.manifest.Apps))
 	copy(apps, m.manifest.Apps)
 
-	return Manifest{Apps: apps}
+	return Manifest{
+		CategoryOrder: categoryOrder,
+		Apps:          apps,
+	}
 }
 
 func (m *Manager) Save(manifest *Manifest) error {
