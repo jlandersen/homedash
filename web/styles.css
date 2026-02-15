@@ -943,6 +943,72 @@ body.view-small .app-card-notes::before {
     color: var(--text-muted);
 }
 
+.category-order-editor {
+    border: 1px solid var(--border-color);
+    border-radius: 0.9rem;
+    background: var(--bg-card);
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.category-order-header {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.category-order-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.category-order-add {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.category-order-add input[type="text"] {
+    min-width: 220px;
+}
+
+.category-order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.category-order-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.category-order-actions {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.category-order-button {
+    padding: 0.45rem 0.65rem;
+}
+
+.category-order-empty {
+    padding: 0.75rem;
+    border: 1px dashed var(--border-color);
+    border-radius: 0.7rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
 .edit-list {
     display: flex;
     flex-direction: column;
@@ -989,7 +1055,10 @@ body.view-small .app-card-notes::before {
 }
 
 .edit-fields input[type="text"],
-.edit-fields select {
+.edit-fields select,
+.edit-text-input,
+.category-order-add input[type="text"],
+.category-order-row input[type="text"] {
     padding: 0.5rem 0.65rem;
     min-height: 38px;
     line-height: 1.2;
@@ -998,6 +1067,8 @@ body.view-small .app-card-notes::before {
     background: var(--bg-secondary);
     color: var(--text-primary);
     font-size: 0.85rem;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 .icon-select {
@@ -1113,9 +1184,29 @@ body.view-small .app-card-notes::before {
 }
 
 .edit-fields input[type="text"]:focus,
-.edit-fields select:focus {
+.edit-fields select:focus,
+.edit-text-input:focus,
+.category-order-add input[type="text"]:focus,
+.category-order-row input[type="text"]:focus {
     outline: 2px solid var(--accent-glow);
     border-color: var(--accent);
+}
+
+.edit-fields input[type="text"]:-webkit-autofill,
+.edit-fields input[type="text"]:-webkit-autofill:hover,
+.edit-fields input[type="text"]:-webkit-autofill:focus,
+.edit-text-input:-webkit-autofill,
+.edit-text-input:-webkit-autofill:hover,
+.edit-text-input:-webkit-autofill:focus,
+.category-order-add input[type="text"]:-webkit-autofill,
+.category-order-add input[type="text"]:-webkit-autofill:hover,
+.category-order-add input[type="text"]:-webkit-autofill:focus,
+.category-order-row input[type="text"]:-webkit-autofill,
+.category-order-row input[type="text"]:-webkit-autofill:hover,
+.category-order-row input[type="text"]:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text-primary);
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-secondary) inset;
+    box-shadow: 0 0 0 1000px var(--bg-secondary) inset;
 }
 
 .checkbox-field {
@@ -1354,5 +1445,24 @@ body.view-small .app-card-notes::before {
         bottom: 6rem;
         margin: 0 1rem;
         width: calc(100vw - 2rem);
+    }
+
+    .category-order-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .category-order-add input[type="text"] {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .category-order-row {
+        grid-template-columns: 1fr;
+    }
+
+    .category-order-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
     }
 }

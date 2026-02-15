@@ -34,8 +34,10 @@ const history = {
 
 let clockEl, dateEl, appGridEl, searchBtn, themeBtn, viewBtn, editBtn, commandPalette, searchInput, searchResults, statsDetailsEl;
 let editModal, editListEl, editSaveBtn, editCancelBtn, editAddBtn;
+let editCategoryOrderListEl, editCategoryOrderAddBtn, editCategoryOrderInput;
 let isEditMode = false;
 let editAppsDraft = [];
+let editCategoryOrderDraft = [];
 let timeFormatter;
 let dateFormatter;
 let lastTimeFormat24h;
@@ -58,6 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
     editSaveBtn = document.getElementById('editSaveBtn');
     editCancelBtn = document.getElementById('editCancelBtn');
     editAddBtn = document.getElementById('editAddBtn');
+    editCategoryOrderListEl = document.getElementById('editCategoryOrderList');
+    editCategoryOrderAddBtn = document.getElementById('editCategoryOrderAddBtn');
+    editCategoryOrderInput = document.getElementById('editCategoryOrderInput');
 
     initClock();
     initTheme();
@@ -242,6 +247,14 @@ function initEditMode() {
     editCancelBtn.addEventListener('click', closeEditMode);
     editSaveBtn.addEventListener('click', saveEditMode);
     editAddBtn.addEventListener('click', addEditRow);
+    if (editCategoryOrderAddBtn && editCategoryOrderInput) {
+        editCategoryOrderAddBtn.addEventListener('click', addCategoryOrderEntry);
+        editCategoryOrderInput.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            addCategoryOrderEntry();
+        });
+    }
 
     editModal.addEventListener('click', (e) => {
         if (e.target === editModal) {
@@ -352,6 +365,46 @@ function initEditMode() {
         }
     });
 
+    if (editCategoryOrderListEl) {
+        editCategoryOrderListEl.addEventListener('input', (e) => {
+            const input = e.target.closest('input[data-role="category-order-name"]');
+            if (!input) return;
+            const row = input.closest('[data-category-order-index]');
+            if (!row) return;
+            const index = Number(row.dataset.categoryOrderIndex);
+            if (Number.isNaN(index)) return;
+            editCategoryOrderDraft[index] = input.value;
+        });
+
+        editCategoryOrderListEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const row = btn.closest('[data-category-order-index]');
+            if (!row) return;
+            const index = Number(row.dataset.categoryOrderIndex);
+            if (Number.isNaN(index)) return;
+
+            if (btn.dataset.action === 'category-order-delete') {
+                editCategoryOrderDraft.splice(index, 1);
+                renderCategoryOrderList();
+                return;
+            }
+            if (btn.dataset.action === 'category-order-up' && index > 0) {
+                const temp = editCategoryOrderDraft[index - 1];
+                editCategoryOrderDraft[index - 1] = editCategoryOrderDraft[index];
+                editCategoryOrderDraft[index] = temp;
+                renderCategoryOrderList();
+                return;
+            }
+            if (btn.dataset.action === 'category-order-down' && index < editCategoryOrderDraft.length - 1) {
+                const temp = editCategoryOrderDraft[index + 1];
+                editCategoryOrderDraft[index + 1] = editCategoryOrderDraft[index];
+                editCategoryOrderDraft[index] = temp;
+                renderCategoryOrderList();
+            }
+        });
+    }
+
     document.addEventListener('click', (e) => {
         if (!isEditMode || !editListEl) return;
         editListEl.querySelectorAll('.icon-select.open').forEach((openSelect) => {
@@ -423,6 +476,7 @@ async function openEditMode() {
         }
         const manifestData = await res.json();
         const appList = Array.isArray(manifestData.apps) ? manifestData.apps : [];
+        const categoryOrder = Array.isArray(manifestData.categoryOrder) ? manifestData.categoryOrder : [];
         editAppsDraft = appList.map((app) => ({
             name: app.name || '',
             url: app.url || '',
@@ -433,7 +487,9 @@ async function openEditMode() {
             checkType: app.checkType || '',
             skipCheck: Boolean(app.skipCheck)
         }));
+        editCategoryOrderDraft = categoryOrder.map((category) => String(category || ''));
         renderEditList();
+        renderCategoryOrderList();
         editModal.classList.add('open');
         isEditMode = true;
     } catch (err) {
@@ -447,6 +503,10 @@ function closeEditMode() {
     editModal.classList.remove('open');
     isEditMode = false;
     editAppsDraft = [];
+    editCategoryOrderDraft = [];
+    if (editCategoryOrderInput) {
+        editCategoryOrderInput.value = '';
+    }
 }
 
 function addEditRow() {
@@ -566,10 +626,54 @@ function renderEditList() {
     }).join('') + categoryDatalist;
 }
 
+function renderCategoryOrderList() {
+    if (!editCategoryOrderListEl) return;
+    if (!editCategoryOrderDraft.length) {
+        editCategoryOrderListEl.innerHTML = '<div class="category-order-empty">No category order entries. Add one to customize sorting.</div>';
+        return;
+    }
+    editCategoryOrderListEl.innerHTML = editCategoryOrderDraft.map((category, index) => `
+        <div class="category-order-row" data-category-order-index="${index}">
+            <input type="text" class="edit-text-input" data-role="category-order-name" value="${escapeHtml(category)}" placeholder="Category name" />
+            <div class="category-order-actions">
+                <button type="button" class="secondary-button category-order-button" data-action="category-order-up" ${index === 0 ? 'disabled' : ''}>Up</button>
+                <button type="button" class="secondary-button category-order-button" data-action="category-order-down" ${index === editCategoryOrderDraft.length - 1 ? 'disabled' : ''}>Down</button>
+                <button type="button" class="danger-button category-order-button" data-action="category-order-delete">Remove</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function addCategoryOrderEntry() {
+    if (!editCategoryOrderInput) return;
+    const value = editCategoryOrderInput.value.trim();
+    if (!value) return;
+    const exists = editCategoryOrderDraft.some((entry) => entry.trim().toLowerCase() === value.toLowerCase());
+    if (exists) return;
+    editCategoryOrderDraft.push(value);
+    editCategoryOrderInput.value = '';
+    renderCategoryOrderList();
+}
+
+function normalizeCategoryOrder(order) {
+    const seen = new Set();
+    const normalized = [];
+    order.forEach((category) => {
+        const value = String(category || '').trim();
+        if (!value) return;
+        const key = value.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        normalized.push(value);
+    });
+    return normalized;
+}
+
 async function saveEditMode() {
     if (!isEditMode) return;
 
     const payload = {
+        categoryOrder: normalizeCategoryOrder(editCategoryOrderDraft),
         apps: editAppsDraft.map((app) => ({
             name: app.name || '',
             url: app.url || '',
