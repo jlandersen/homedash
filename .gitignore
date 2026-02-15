@@ -1,6 +1,7 @@
 # Binary
 homedash
 homedash-*
+web/dist/
 
 # Local config (keep example)
 apps.yaml

@@ -9,6 +9,8 @@ RUN go mod download
 
 COPY . .
 
+RUN go generate ./...
+
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o homedash .
 
 FROM scratch
@@ -16,6 +18,8 @@ FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /app/homedash /homedash
+
+USER 65532:65532
 
 EXPOSE 8080
 

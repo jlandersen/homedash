@@ -19,7 +19,7 @@ Minimal dependencies, single binary, easy configuration via YAML manifest.
 - **Dark/Light theme** - Toggle with localStorage persistence
 - **Command palette** - Quick launch apps with `Cmd/Ctrl+K`
 - **Responsive** - Works on desktop and mobile
-- **No build step** - Vanilla HTML/CSS/JS frontend
+- **Optimized static assets** - Minified and pre-gzipped in the embedded binary
 
 ## Quick Start
 
@@ -57,6 +57,7 @@ Open http://localhost:8080 in your browser.
 services:
   homedash:
     image: ghcr.io/jlandersen/homedash:latest
+    user: "${PUID:-1000}:${PGID:-1000}"
     ports:
       - "8080:8080"
     volumes:
@@ -91,7 +92,7 @@ services:
 
 ```bash
 docker pull ghcr.io/jlandersen/homedash:latest
-docker run -p 8080:8080 \
+docker run --user "$(id -u):$(id -g)" -p 8080:8080 \
   -v $(pwd)/apps.yaml:/apps.yaml \
   -e HOMEDASH_MANIFEST=/apps.yaml \
   ghcr.io/jlandersen/homedash:latest
@@ -289,21 +290,23 @@ homedash/
 └── web/
     ├── index.html               # Dashboard HTML
     ├── styles.css               # Styling with dark/light themes
-    └── app.js                   # Frontend JavaScript
+    ├── app.js                   # Frontend JavaScript
+    └── dist/                    # Generated minified + gzipped assets
 ```
 
 ## Development
 
 ```bash
 # Run in development
+go generate ./...
 go run .
 
 # Build binary
-go build -o homedash .
+./build.sh
 
 # Build for different platforms
-GOOS=linux GOARCH=amd64 go build -o homedash-linux-amd64 .
-GOOS=linux GOARCH=arm64 go build -o homedash-linux-arm64 .
+GOOS=linux GOARCH=amd64 ./build.sh -o homedash-linux-amd64
+GOOS=linux GOARCH=arm64 ./build.sh -o homedash-linux-arm64
 ```
 
 ## Keyboard Shortcuts
@@ -322,7 +325,7 @@ Inspired by [ddash](https://github.com/jsixface/ddash) - a Docker dashboard with
 HomeDash is a simplified alternative that:
 - Doesn't require Docker or Caddy
 - Uses a YAML manifest instead of Docker labels
-- Has a vanilla JS frontend (no React/build step)
+- Has a vanilla JS frontend (no Node toolchain)
 - Deploys as a single binary
 
 ## License

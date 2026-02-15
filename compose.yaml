@@ -2,6 +2,7 @@ services:
   homedash:
     build: .
     container_name: homedash
+    user: "${PUID:-1000}:${PGID:-1000}"
     restart: unless-stopped
     ports:
       - "9443:8080"

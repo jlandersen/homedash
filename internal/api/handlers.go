@@ -50,7 +50,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux, webFS fs.FS) {
 	mux.HandleFunc("/api/config", h.handleConfig)
 	mux.HandleFunc("/api/events", h.handleSSE)
 	mux.HandleFunc("/api/stats", h.handleStats)
-	mux.Handle("/", http.FileServer(http.FS(webFS)))
+	mux.Handle("/", NewStaticHandler(webFS))
 }
 
 func (h *Handler) handleApps(w http.ResponseWriter, r *http.Request) {

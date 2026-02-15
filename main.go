@@ -18,7 +18,8 @@ import (
 	"homedash/internal/stats"
 )
 
-//go:embed web/*
+//go:generate go run ./internal/webbuild
+//go:embed web/dist
 var webContent embed.FS
 
 func main() {
@@ -63,7 +64,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	webFS, err := fs.Sub(webContent, "web")
+	webFS, err := fs.Sub(webContent, "web/dist")
 	if err != nil {
 		log.Fatalf("Failed to get web filesystem: %v", err)
 	}
