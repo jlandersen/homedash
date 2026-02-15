@@ -35,6 +35,10 @@ const history = {
 let clockEl, dateEl, appGridEl, searchBtn, themeBtn, viewBtn, editBtn, commandPalette, searchInput, searchResults, statsDetailsEl;
 let editModal, editListEl, editSaveBtn, editCancelBtn, editAddBtn;
 let editCategoryOrderListEl, editCategoryOrderAddBtn, editCategoryOrderInput;
+let cpuValueEl, ramValueEl, tempValueEl;
+let hostCpuSparkEl, hostRamSparkEl, hostTempSparkEl, hostTxSparkEl, hostRxSparkEl;
+let hostCpuValueEl, hostRamValueEl, hostTempValueEl, hostTxValueEl, hostRxValueEl;
+let statCpuEl, statRamEl, statTempEl, hostTxCardEl, hostRxCardEl;
 let isEditMode = false;
 let editAppsDraft = [];
 let editCategoryOrderDraft = [];
@@ -55,6 +59,24 @@ document.addEventListener('DOMContentLoaded', () => {
     searchInput = document.getElementById('searchInput');
     searchResults = document.getElementById('searchResults');
     statsDetailsEl = document.getElementById('statsDetails');
+    cpuValueEl = document.getElementById('cpu-value');
+    ramValueEl = document.getElementById('ram-value');
+    tempValueEl = document.getElementById('temp-value');
+    hostCpuSparkEl = document.getElementById('host-cpu-spark');
+    hostRamSparkEl = document.getElementById('host-ram-spark');
+    hostTempSparkEl = document.getElementById('host-temp-spark');
+    hostTxSparkEl = document.getElementById('host-tx-spark');
+    hostRxSparkEl = document.getElementById('host-rx-spark');
+    hostCpuValueEl = document.getElementById('host-cpu-value');
+    hostRamValueEl = document.getElementById('host-ram-value');
+    hostTempValueEl = document.getElementById('host-temp-value');
+    hostTxValueEl = document.getElementById('host-tx-value');
+    hostRxValueEl = document.getElementById('host-rx-value');
+    statCpuEl = document.getElementById('stat-cpu');
+    statRamEl = document.getElementById('stat-ram');
+    statTempEl = document.getElementById('stat-temp');
+    hostTxCardEl = document.getElementById('host-tx-card');
+    hostRxCardEl = document.getElementById('host-rx-card');
     editModal = document.getElementById('editModal');
     editListEl = document.getElementById('editList');
     editSaveBtn = document.getElementById('editSaveBtn');
@@ -981,14 +1003,14 @@ function renderStats(s) {
     pruneHistory(history.host.netTx, now);
     pruneHistory(history.host.netRx, now);
     renderHostSparklines();
-    if (config.showCPU) {
-        document.getElementById('cpu-value').textContent = s.cpu !== null ? s.cpu.toFixed(0) : '--';
+    if (config.showCPU && cpuValueEl) {
+        cpuValueEl.textContent = s.cpu !== null ? s.cpu.toFixed(0) : '--';
     }
-    if (config.showRAM) {
-        document.getElementById('ram-value').textContent = s.ram !== null ? s.ram.toFixed(0) : '--';
+    if (config.showRAM && ramValueEl) {
+        ramValueEl.textContent = s.ram !== null ? s.ram.toFixed(0) : '--';
     }
-    if (config.showTemp) {
-        document.getElementById('temp-value').textContent = s.temp !== null ? s.temp.toFixed(0) : '--';
+    if (config.showTemp && tempValueEl) {
+        tempValueEl.textContent = s.temp !== null ? s.temp.toFixed(0) : '--';
     }
     updateHostTrendValues(s);
 }
@@ -1031,13 +1053,11 @@ function hydrateHistory(samples) {
 }
 
 function applyStatsVisibility() {
-    document.getElementById('stat-cpu').style.display = config.showCPU ? '' : 'none';
-    document.getElementById('stat-ram').style.display = config.showRAM ? '' : 'none';
-    document.getElementById('stat-temp').style.display = config.showTemp ? '' : 'none';
-    const hostTxCard = document.getElementById('host-tx-card');
-    const hostRxCard = document.getElementById('host-rx-card');
-    if (hostTxCard) hostTxCard.style.display = config.showNetTX ? '' : 'none';
-    if (hostRxCard) hostRxCard.style.display = config.showNetRX ? '' : 'none';
+    if (statCpuEl) statCpuEl.style.display = config.showCPU ? '' : 'none';
+    if (statRamEl) statRamEl.style.display = config.showRAM ? '' : 'none';
+    if (statTempEl) statTempEl.style.display = config.showTemp ? '' : 'none';
+    if (hostTxCardEl) hostTxCardEl.style.display = config.showNetTX ? '' : 'none';
+    if (hostRxCardEl) hostRxCardEl.style.display = config.showNetRX ? '' : 'none';
     if (statsDetailsEl) {
         const showDetails = config.showNetTX || config.showNetRX;
         statsDetailsEl.style.display = showDetails ? '' : 'none';
@@ -1079,58 +1099,67 @@ function pushHistory(list, timestamp, value) {
 
 function pruneHistory(list, now) {
     const cutoff = now - HISTORY_WINDOW_MS;
-    while (list.length && list[0].t < cutoff) {
-        list.shift();
+    let firstValidIndex = 0;
+    const listLength = list.length;
+    while (firstValidIndex < listLength && list[firstValidIndex].t < cutoff) {
+        firstValidIndex += 1;
+    }
+    if (firstValidIndex > 0) {
+        list.splice(0, firstValidIndex);
     }
 }
 
 function renderHostSparklines() {
-    const cpuEl = document.getElementById('host-cpu-spark');
-    const ramEl = document.getElementById('host-ram-spark');
-    const tempEl = document.getElementById('host-temp-spark');
-    const txEl = document.getElementById('host-tx-spark');
-    const rxEl = document.getElementById('host-rx-spark');
-    if (cpuEl) cpuEl.innerHTML = renderSparkline(history.host.cpu, { min: 0, max: 100 }) || '';
-    if (ramEl) ramEl.innerHTML = renderSparkline(history.host.ram, { min: 0, max: 100 }) || '';
-    if (tempEl) tempEl.innerHTML = renderSparkline(history.host.temp) || '';
-    if (txEl) txEl.innerHTML = renderSparkline(history.host.netTx) || '';
-    if (rxEl) rxEl.innerHTML = renderSparkline(history.host.netRx) || '';
+    if (hostCpuSparkEl) hostCpuSparkEl.innerHTML = renderSparkline(history.host.cpu, { min: 0, max: 100 }) || '';
+    if (hostRamSparkEl) hostRamSparkEl.innerHTML = renderSparkline(history.host.ram, { min: 0, max: 100 }) || '';
+    if (hostTempSparkEl) hostTempSparkEl.innerHTML = renderSparkline(history.host.temp) || '';
+    if (hostTxSparkEl) hostTxSparkEl.innerHTML = renderSparkline(history.host.netTx) || '';
+    if (hostRxSparkEl) hostRxSparkEl.innerHTML = renderSparkline(history.host.netRx) || '';
 }
 
 function updateHostTrendValues(s) {
-    const cpuEl = document.getElementById('host-cpu-value');
-    const ramEl = document.getElementById('host-ram-value');
-    const tempEl = document.getElementById('host-temp-value');
-    const txEl = document.getElementById('host-tx-value');
-    const rxEl = document.getElementById('host-rx-value');
-    if (cpuEl) cpuEl.textContent = s.cpu !== null && s.cpu !== undefined ? `${s.cpu.toFixed(0)}%` : '--';
-    if (ramEl) ramEl.textContent = s.ram !== null && s.ram !== undefined ? `${s.ram.toFixed(0)}%` : '--';
-    if (tempEl) tempEl.textContent = s.temp !== null && s.temp !== undefined ? `${s.temp.toFixed(0)}°C` : '--';
-    if (txEl) {
+    if (hostCpuValueEl) hostCpuValueEl.textContent = s.cpu !== null && s.cpu !== undefined ? `${s.cpu.toFixed(0)}%` : '--';
+    if (hostRamValueEl) hostRamValueEl.textContent = s.ram !== null && s.ram !== undefined ? `${s.ram.toFixed(0)}%` : '--';
+    if (hostTempValueEl) hostTempValueEl.textContent = s.temp !== null && s.temp !== undefined ? `${s.temp.toFixed(0)}°C` : '--';
+    if (hostTxValueEl) {
         const formatted = s.netTx !== null && s.netTx !== undefined ? formatNetValue(s.netTx) : null;
-        txEl.textContent = formatted ? `${formatted.value}${formatted.unit}` : '--';
+        hostTxValueEl.textContent = formatted ? `${formatted.value}${formatted.unit}` : '--';
     }
-    if (rxEl) {
+    if (hostRxValueEl) {
         const formatted = s.netRx !== null && s.netRx !== undefined ? formatNetValue(s.netRx) : null;
-        rxEl.textContent = formatted ? `${formatted.value}${formatted.unit}` : '--';
+        hostRxValueEl.textContent = formatted ? `${formatted.value}${formatted.unit}` : '--';
     }
 }
 
 function renderSparkline(series, options = {}) {
-    const points = series.filter(point => point.v !== null && point.v !== undefined);
-    if (points.length < 2) return '';
-    const minVal = options.min !== undefined ? options.min : Math.min(...points.map(p => p.v));
-    const maxVal = options.max !== undefined ? options.max : Math.max(...points.map(p => p.v));
+    const values = [];
+    let minVal = options.min;
+    let maxVal = options.max;
+
+    for (let i = 0; i < series.length; i++) {
+        const value = series[i].v;
+        if (value === null || value === undefined) continue;
+        values.push(value);
+        if (minVal === undefined || value < minVal) minVal = value;
+        if (maxVal === undefined || value > maxVal) maxVal = value;
+    }
+
+    if (values.length < 2) return '';
+
     const span = maxVal - minVal || 1;
     const width = 120;
     const height = 28;
     const strokeWidth = options.strokeWidth || 2;
-    const step = width / (points.length - 1);
-    const path = points.map((point, index) => {
+    const step = width / (values.length - 1);
+    let path = '';
+
+    for (let index = 0; index < values.length; index++) {
+        const value = values[index];
         const x = index * step;
-        const y = height - ((point.v - minVal) / span) * height;
-        return `${index === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
+        const y = height - ((value - minVal) / span) * height;
+        path += `${index === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)} `;
+    }
+
     return `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
