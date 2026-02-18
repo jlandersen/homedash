@@ -1,4 +1,5 @@
 import { appsStore, configStore, NOTES_DELAY_MS, ICON_IDS } from './state.js';
+import { effect } from './store.js';
 import { initClock, buildClockFormatters } from './clock.js';
 import { initStats, initStatsDetails, initSparklineCleanup, renderStats, hydrateHistory, applyStatsVisibility } from './stats.js';
 import { initEditMode, openEditMode, closeEditMode, applyEditVisibility } from './editor.js';
@@ -67,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderApps(apps);
     });
 
-    configStore.subscribe((cfg) => {
+    effect([configStore], ([cfg]) => {
         buildClockFormatters();
         applyStatsVisibility();
         applyEditVisibility(cfg);

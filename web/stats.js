@@ -1,4 +1,4 @@
-import { configStore, statsStore, history, HISTORY_WINDOW_MS } from './state.js';
+import { statsStore, visibleStatsStore, history, HISTORY_WINDOW_MS } from './state.js';
 
 let cpuValueEl;
 let ramValueEl;
@@ -93,14 +93,14 @@ export function renderStats(s) {
     pushHistory(history.host.netRx, now, s.netRx);
     pruneAllHistory(now);
     renderHostSparklines();
-    const config = configStore.get();
-    if (config.showCPU && cpuValueEl) {
+    const visible = visibleStatsStore.get();
+    if (visible.cpu && cpuValueEl) {
         cpuValueEl.textContent = s.cpu !== null ? s.cpu.toFixed(0) : '--';
     }
-    if (config.showRAM && ramValueEl) {
+    if (visible.ram && ramValueEl) {
         ramValueEl.textContent = s.ram !== null ? s.ram.toFixed(0) : '--';
     }
-    if (config.showTemp && tempValueEl) {
+    if (visible.temp && tempValueEl) {
         tempValueEl.textContent = s.temp !== null ? s.temp.toFixed(0) : '--';
     }
     updateHostTrendValues(s);
@@ -138,14 +138,14 @@ export function hydrateHistory(samples) {
 }
 
 export function applyStatsVisibility() {
-    const config = configStore.get();
-    if (statCpuEl) statCpuEl.style.display = config.showCPU ? '' : 'none';
-    if (statRamEl) statRamEl.style.display = config.showRAM ? '' : 'none';
-    if (statTempEl) statTempEl.style.display = config.showTemp ? '' : 'none';
-    if (hostTxCardEl) hostTxCardEl.style.display = config.showNetTX ? '' : 'none';
-    if (hostRxCardEl) hostRxCardEl.style.display = config.showNetRX ? '' : 'none';
+    const visible = visibleStatsStore.get();
+    if (statCpuEl) statCpuEl.style.display = visible.cpu ? '' : 'none';
+    if (statRamEl) statRamEl.style.display = visible.ram ? '' : 'none';
+    if (statTempEl) statTempEl.style.display = visible.temp ? '' : 'none';
+    if (hostTxCardEl) hostTxCardEl.style.display = visible.netTX ? '' : 'none';
+    if (hostRxCardEl) hostRxCardEl.style.display = visible.netRX ? '' : 'none';
     if (statsDetailsEl) {
-        const showDetails = config.showNetTX || config.showNetRX;
+        const showDetails = visible.netTX || visible.netRX;
         statsDetailsEl.style.display = showDetails ? '' : 'none';
     }
 }
