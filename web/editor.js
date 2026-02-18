@@ -1,4 +1,4 @@
-import { ICON_IDS } from './state.js';
+import { ICON_IDS, configStore } from './state.js';
 import { escapeHtml, renderIcon } from './utils.js';
 
 let editModal;
@@ -197,9 +197,9 @@ export function initEditMode(els) {
 }
 
 
-export async function openEditMode(cfg) {
+export async function openEditMode() {
     if (!editModal) return;
-    if (cfg && cfg.allowEdit === false) return;
+    if (configStore.get().allowEdit === false) return;
     try {
         const res = await fetch('/api/manifest');
         if (!res.ok) throw new Error('Failed to load manifest');

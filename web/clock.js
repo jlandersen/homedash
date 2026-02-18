@@ -1,4 +1,4 @@
-import { config } from './state.js';
+import { configStore } from './state.js';
 
 let clockEl;
 let dateEl;
@@ -15,6 +15,7 @@ export function initClock(clockElement, dateElement) {
 }
 
 export function buildClockFormatters() {
+    const config = configStore.get();
     timeFormatter = new Intl.DateTimeFormat([], {
         hour: '2-digit',
         minute: '2-digit',
@@ -30,7 +31,7 @@ export function buildClockFormatters() {
 
 function updateClock() {
     const now = new Date();
-    if (!timeFormatter || lastTimeFormat24h !== config.timeFormat24h) {
+    if (!timeFormatter || lastTimeFormat24h !== configStore.get().timeFormat24h) {
         buildClockFormatters();
     }
     clockEl.textContent = timeFormatter.format(now);

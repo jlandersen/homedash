@@ -1,4 +1,4 @@
-import { apps, ICON_IDS } from './state.js';
+import { appsStore, ICON_IDS } from './state.js';
 import { escapeHtml, renderIcon } from './utils.js';
 
 let commandPalette;
@@ -54,6 +54,7 @@ export function closeCommandPalette() {
 
 function filterApps(query) {
     const q = query.toLowerCase().trim();
+    const apps = appsStore.get();
 
     if (!q) {
         filteredResults = apps.slice(0, 5);

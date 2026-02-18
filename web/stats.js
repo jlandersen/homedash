@@ -1,4 +1,4 @@
-import { config, history, stats, setStats, HISTORY_WINDOW_MS } from './state.js';
+import { configStore, statsStore, history, HISTORY_WINDOW_MS } from './state.js';
 
 let cpuValueEl;
 let ramValueEl;
@@ -92,6 +92,7 @@ export function renderStats(s) {
     pushHistory(history.host.netRx, now, s.netRx);
     pruneAllHistory(now);
     renderHostSparklines();
+    const config = configStore.get();
     if (config.showCPU && cpuValueEl) {
         cpuValueEl.textContent = s.cpu !== null ? s.cpu.toFixed(0) : '--';
     }
@@ -126,16 +127,17 @@ export function hydrateHistory(samples) {
 
     const latest = samples[samples.length - 1];
     if (latest && latest.Stats) {
-        setStats(latest.Stats);
+        statsStore.set(latest.Stats);
     }
 
     const now = Date.now();
     pruneAllHistory(now);
     renderHostSparklines();
-    updateHostTrendValues(stats);
+    updateHostTrendValues(statsStore.get());
 }
 
 export function applyStatsVisibility() {
+    const config = configStore.get();
     if (statCpuEl) statCpuEl.style.display = config.showCPU ? '' : 'none';
     if (statRamEl) statRamEl.style.display = config.showRAM ? '' : 'none';
     if (statTempEl) statTempEl.style.display = config.showTemp ? '' : 'none';

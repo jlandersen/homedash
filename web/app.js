@@ -1,4 +1,4 @@
-import { apps, setApps, setConfig, setStats, config, NOTES_DELAY_MS, ICON_IDS } from './state.js';
+import { appsStore, configStore, NOTES_DELAY_MS, ICON_IDS } from './state.js';
 import { initClock, buildClockFormatters } from './clock.js';
 import { initStats, initStatsDetails, initSparklineCleanup, renderStats, hydrateHistory, applyStatsVisibility } from './stats.js';
 import { initEditMode, openEditMode, closeEditMode, applyEditVisibility } from './editor.js';
@@ -63,6 +63,17 @@ document.addEventListener('DOMContentLoaded', () => {
         editBtn
     });
 
+    appsStore.subscribe((apps) => {
+        renderApps(apps);
+        applyEditVisibility(configStore.get());
+    });
+
+    configStore.subscribe((cfg) => {
+        buildClockFormatters();
+        applyStatsVisibility();
+        applyEditVisibility(cfg);
+    });
+
     initKeyboardShortcuts();
     initNotesHover(appGridEl);
 
@@ -108,7 +119,7 @@ function initKeyboardShortcuts() {
         }
         if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
             e.preventDefault();
-            openEditMode(config);
+            openEditMode();
         }
         if (e.key === 'Escape') {
             closeCommandPalette();
@@ -171,9 +182,7 @@ function initNotesHover(appGridEl) {
 async function fetchApps() {
     try {
         const res = await fetch('/api/apps');
-        setApps(await res.json());
-        renderApps(apps);
-        applyEditVisibility(config);
+        appsStore.set(await res.json());
     } catch (err) {
         console.error('Failed to fetch apps:', err);
         appGridEl.innerHTML = '<div class="loading">Failed to load apps. Is the server running?</div>';
@@ -196,10 +205,7 @@ function connectSSE() {
 
     es.addEventListener('config', (e) => {
         try {
-            setConfig(JSON.parse(e.data));
-            buildClockFormatters();
-            applyStatsVisibility();
-            applyEditVisibility(config);
+            configStore.set(JSON.parse(e.data));
         } catch (err) {
             console.error('Failed to parse config event:', err);
         }
@@ -208,12 +214,12 @@ function connectSSE() {
     es.addEventListener('apps', (e) => {
         try {
             const newApps = JSON.parse(e.data);
-            if (appsStructureChanged(apps, newApps)) {
-                setApps(newApps);
-                renderApps(apps);
+            const currentApps = appsStore.get();
+            if (appsStructureChanged(currentApps, newApps)) {
+                appsStore.set(newApps);
             } else {
-                setApps(newApps);
-                updateAppStatuses(apps);
+                appsStore.set(newApps);
+                updateAppStatuses(newApps);
             }
         } catch (err) {
             console.error('Failed to parse apps event:', err);
@@ -222,9 +228,7 @@ function connectSSE() {
 
     es.addEventListener('stats', (e) => {
         try {
-            const s = JSON.parse(e.data);
-            setStats(s);
-            renderStats(s);
+            renderStats(JSON.parse(e.data));
         } catch (err) {
             console.error('Failed to parse stats event:', err);
         }
@@ -283,6 +287,7 @@ function appsStructureChanged(oldApps, newApps) {
 function updateAppStatuses(appList) {
     appList.forEach((app) => {
         const appId = appCardId(app);
+        const card = appGridEl.querySelector(`[data-app-id="${appId}"]`);
         if (!card) return;
 
         const statusDot = card.querySelector('.status-dot');
