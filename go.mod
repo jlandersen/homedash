@@ -3,6 +3,7 @@ module homedash
 go 1.24.0
 
 require (
+	github.com/evanw/esbuild v0.27.3
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/tdewolff/minify/v2 v2.24.8
