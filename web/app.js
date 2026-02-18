@@ -1,31 +1,19 @@
-import { appsStore, configStore, NOTES_DELAY_MS, ICON_IDS } from './state.js';
-import { effect } from './store.js';
-import { initClock, buildClockFormatters } from './clock.js';
-import { initStats, initStatsDetails, initSparklineCleanup, renderStats, hydrateHistory, applyStatsVisibility } from './stats.js';
-import { initEditMode, openEditMode, closeEditMode, applyEditVisibility } from './editor.js';
-import { initCommandPalette, openCommandPalette, closeCommandPalette } from './command-palette.js';
-import { escapeHtml, renderIcon } from './utils.js';
-
-let appGridEl;
+import { appsStore, configStore } from './state.js';
+import { createClock } from './clock.js';
+import { createStats } from './stats.js';
+import { createEditMode } from './editor.js';
+import { createCommandPalette } from './command-palette.js';
+import { createAppGrid } from './app-grid.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const clockEl = document.getElementById('clock');
-    const dateEl = document.getElementById('date');
-    appGridEl = document.getElementById('appGrid');
-    const searchBtn = document.getElementById('searchBtn');
-    const themeBtn = document.getElementById('themeBtn');
-    const viewBtn = document.getElementById('viewBtn');
-    const editBtn = document.getElementById('editBtn');
-    const commandPalette = document.getElementById('commandPalette');
-    const searchInput = document.getElementById('searchInput');
-    const searchResults = document.getElementById('searchResults');
-    const statsDetailsEl = document.getElementById('statsDetails');
+    const clock = createClock();
+    clock.mount({
+        clockEl: document.getElementById('clock'),
+        dateEl: document.getElementById('date')
+    });
 
-    initClock(clockEl, dateEl);
-    initTheme(themeBtn);
-    initView(viewBtn);
-
-    initStats({
+    const stats = createStats();
+    stats.mount({
         cpuValueEl: document.getElementById('cpu-value'),
         ramValueEl: document.getElementById('ram-value'),
         tempValueEl: document.getElementById('temp-value'),
@@ -44,15 +32,22 @@ document.addEventListener('DOMContentLoaded', () => {
         statTempEl: document.getElementById('stat-temp'),
         hostTxCardEl: document.getElementById('host-tx-card'),
         hostRxCardEl: document.getElementById('host-rx-card'),
-        statsDetailsEl
+        statsDetailsEl: document.getElementById('statsDetails')
     });
 
-    initStatsDetails(statsDetailsEl);
-    initSparklineCleanup();
+    const appGrid = createAppGrid();
+    appGrid.mount({ gridEl: document.getElementById('appGrid') });
 
-    initCommandPalette({ searchBtn, commandPalette, searchInput, searchResults });
+    const commandPalette = createCommandPalette();
+    commandPalette.mount({
+        searchBtn: document.getElementById('searchBtn'),
+        commandPalette: document.getElementById('commandPalette'),
+        searchInput: document.getElementById('searchInput'),
+        searchResults: document.getElementById('searchResults')
+    });
 
-    initEditMode({
+    const editMode = createEditMode();
+    editMode.mount({
         editModal: document.getElementById('editModal'),
         editListEl: document.getElementById('editList'),
         editSaveBtn: document.getElementById('editSaveBtn'),
@@ -61,25 +56,30 @@ document.addEventListener('DOMContentLoaded', () => {
         editCategoryOrderListEl: document.getElementById('editCategoryOrderList'),
         editCategoryOrderAddBtn: document.getElementById('editCategoryOrderAddBtn'),
         editCategoryOrderInput: document.getElementById('editCategoryOrderInput'),
-        editBtn
+        editBtn: document.getElementById('editBtn')
     });
 
-    appsStore.subscribe((apps) => {
-        renderApps(apps);
+    initTheme(document.getElementById('themeBtn'));
+    initView(document.getElementById('viewBtn'));
+
+    document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            commandPalette.open();
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
+            e.preventDefault();
+            editMode.open();
+        }
+        if (e.key === 'Escape') {
+            commandPalette.close();
+            editMode.close();
+        }
     });
 
-    effect([configStore], ([cfg]) => {
-        buildClockFormatters();
-        applyStatsVisibility();
-        applyEditVisibility(cfg);
-    });
-
-    initKeyboardShortcuts();
-    initNotesHover(appGridEl);
-
-    fetchApps();
-    fetchStatsHistory();
-    connectSSE();
+    fetchApps(appGrid);
+    fetchStatsHistory(stats);
+    connectSSE(stats);
 });
 
 function initTheme(themeBtn) {
@@ -108,96 +108,27 @@ function initView(viewBtn) {
     }
 }
 
-function initKeyboardShortcuts() {
-    document.addEventListener('keydown', (e) => {
-        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-            e.preventDefault();
-            openCommandPalette();
-        }
-        if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
-            e.preventDefault();
-            openEditMode();
-        }
-        if (e.key === 'Escape') {
-            closeCommandPalette();
-            closeEditMode();
-        }
-    });
-}
-
-function initNotesHover(appGridEl) {
-    if (!appGridEl) return;
-    let hoverTimer;
-    let activeHoverCard = null;
-
-    const clearHoverTimer = () => {
-        if (hoverTimer) {
-            clearTimeout(hoverTimer);
-            hoverTimer = null;
-        }
-    };
-
-    appGridEl.addEventListener('mouseover', (event) => {
-        const card = event.target.closest('.app-card.has-notes');
-        if (!card || !appGridEl.contains(card)) return;
-        if (event.relatedTarget && card.contains(event.relatedTarget)) return;
-        clearHoverTimer();
-        activeHoverCard = card;
-        hoverTimer = setTimeout(() => {
-            if (activeHoverCard === card) card.classList.add('notes-active', 'notes-layer');
-        }, NOTES_DELAY_MS);
-    });
-
-    appGridEl.addEventListener('mouseout', (event) => {
-        const card = event.target.closest('.app-card.has-notes');
-        if (!card || !appGridEl.contains(card)) return;
-        if (event.relatedTarget && card.contains(event.relatedTarget)) return;
-        clearHoverTimer();
-        if (activeHoverCard === card) activeHoverCard = null;
-        card.classList.remove('notes-active', 'notes-layer');
-    });
-
-    appGridEl.addEventListener('focusin', (event) => {
-        const card = event.target.closest('.app-card.has-notes');
-        if (!card || !appGridEl.contains(card)) return;
-        clearHoverTimer();
-        activeHoverCard = card;
-        hoverTimer = setTimeout(() => {
-            if (activeHoverCard === card) card.classList.add('notes-active', 'notes-layer');
-        }, NOTES_DELAY_MS);
-    });
-
-    appGridEl.addEventListener('focusout', (event) => {
-        const card = event.target.closest('.app-card.has-notes');
-        if (!card || !appGridEl.contains(card)) return;
-        clearHoverTimer();
-        if (activeHoverCard === card) activeHoverCard = null;
-        card.classList.remove('notes-active', 'notes-layer');
-    });
-}
-
-async function fetchApps() {
+async function fetchApps(appGrid) {
     try {
         const res = await fetch('/api/apps');
         appsStore.set(await res.json());
     } catch (err) {
         console.error('Failed to fetch apps:', err);
-        appGridEl.innerHTML = '<div class="loading">Failed to load apps. Is the server running?</div>';
+        appGrid.setError('Failed to load apps. Is the server running?');
     }
 }
 
-async function fetchStatsHistory() {
+async function fetchStatsHistory(stats) {
     try {
         const res = await fetch('/api/stats');
         if (!res.ok) throw new Error('Failed to fetch stats history');
-        const historyPayload = await res.json();
-        hydrateHistory(historyPayload);
+        stats.hydrateHistory(await res.json());
     } catch (err) {
         console.error('Failed to fetch stats history:', err);
     }
 }
 
-function connectSSE() {
+function connectSSE(stats) {
     const es = new EventSource('/api/events');
 
     es.addEventListener('config', (e) => {
@@ -210,12 +141,7 @@ function connectSSE() {
 
     es.addEventListener('apps', (e) => {
         try {
-            const newApps = JSON.parse(e.data);
-            if (appsStructureChanged(appsStore.get(), newApps)) {
-                appsStore.set(newApps);
-            } else {
-                updateAppStatuses(newApps);
-            }
+            appsStore.set(JSON.parse(e.data));
         } catch (err) {
             console.error('Failed to parse apps event:', err);
         }
@@ -223,7 +149,7 @@ function connectSSE() {
 
     es.addEventListener('stats', (e) => {
         try {
-            renderStats(JSON.parse(e.data));
+            stats.render(JSON.parse(e.data));
         } catch (err) {
             console.error('Failed to parse stats event:', err);
         }
@@ -232,88 +158,4 @@ function connectSSE() {
     es.onerror = () => {
         console.log('SSE connection lost, reconnecting...');
     };
-}
-
-function renderApps(appList) {
-    const groups = {};
-    appList.forEach((app) => {
-        if (!groups[app.category]) groups[app.category] = [];
-        groups[app.category].push(app);
-    });
-
-    const sortedCategories = Object.keys(groups);
-
-    let html = '';
-    sortedCategories.forEach((category) => {
-        html += `
-            <section class="category-section">
-                <div class="category-header">
-                    <h2 class="category-title">${escapeHtml(category)}</h2>
-                    <div class="category-line"></div>
-                </div>
-                <div class="app-grid">
-                    ${groups[category].map((app) => renderAppCard(app)).join('')}
-                </div>
-            </section>
-        `;
-    });
-
-    appGridEl.innerHTML = html || '<div class="loading">No apps configured. Edit apps.yaml to add some!</div>';
-}
-
-function appCardId(app) {
-    return btoa(app.name + '|' + app.url).replace(/[^a-zA-Z0-9]/g, '');
-}
-
-function appsStructureChanged(oldApps, newApps) {
-    if (oldApps.length !== newApps.length) return true;
-    for (let i = 0; i < oldApps.length; i++) {
-        if (oldApps[i].name !== newApps[i].name ||
-            oldApps[i].url !== newApps[i].url ||
-            oldApps[i].category !== newApps[i].category ||
-            oldApps[i].icon !== newApps[i].icon ||
-            oldApps[i].notes !== newApps[i].notes) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function updateAppStatuses(appList) {
-    appList.forEach((app) => {
-        const appId = appCardId(app);
-        const card = appGridEl.querySelector(`[data-app-id="${appId}"]`);
-        if (!card) return;
-
-        const statusDot = card.querySelector('.status-dot');
-        const statusText = card.querySelector('.status-text');
-
-        if (statusDot) {
-            statusDot.className = 'status-dot';
-            if (app.status === 'UP') statusDot.classList.add('up');
-            else if (app.status === 'DOWN') statusDot.classList.add('down');
-            else if (app.status === 'SKIPPED') statusDot.classList.add('skipped');
-        }
-        if (statusText) statusText.textContent = app.status;
-    });
-}
-
-function renderAppCard(app) {
-    const iconId = ICON_IDS.includes(app.icon) ? app.icon : 'box';
-    const icon = renderIcon(iconId);
-    const statusClass = app.status === 'UP' ? 'up' : app.status === 'DOWN' ? 'down' : app.status === 'SKIPPED' ? 'skipped' : '';
-    const appId = appCardId(app);
-    const notesTooltip = app.notes ? `<div class="app-card-notes">${escapeHtml(app.notes)}</div>` : '';
-
-    return `
-        <a class="app-card${app.notes ? ' has-notes' : ''}" data-app-id="${appId}" href="${escapeHtml(app.url)}" target="_blank" rel="noopener noreferrer">
-            <div class="app-card-icon">${icon}</div>
-            <div class="app-card-name">${escapeHtml(app.name)}</div>
-            <div class="app-card-status">
-                <div class="status-dot ${statusClass}"></div>
-                <span class="status-text">${app.status}</span>
-            </div>
-            ${notesTooltip}
-        </a>
-    `;
 }
