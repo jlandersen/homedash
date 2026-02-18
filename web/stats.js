@@ -79,12 +79,7 @@ export function initStatsDetails(statsDetailsElement) {
 
 export function initSparklineCleanup() {
     setInterval(() => {
-        const now = Date.now();
-        pruneHistory(history.host.cpu, now);
-        pruneHistory(history.host.ram, now);
-        pruneHistory(history.host.temp, now);
-        pruneHistory(history.host.netTx, now);
-        pruneHistory(history.host.netRx, now);
+        pruneAllHistory(Date.now());
     }, 10000);
 }
 
@@ -95,11 +90,7 @@ export function renderStats(s) {
     pushHistory(history.host.temp, now, s.temp);
     pushHistory(history.host.netTx, now, s.netTx);
     pushHistory(history.host.netRx, now, s.netRx);
-    pruneHistory(history.host.cpu, now);
-    pruneHistory(history.host.ram, now);
-    pruneHistory(history.host.temp, now);
-    pruneHistory(history.host.netTx, now);
-    pruneHistory(history.host.netRx, now);
+    pruneAllHistory(now);
     renderHostSparklines();
     if (config.showCPU && cpuValueEl) {
         cpuValueEl.textContent = s.cpu !== null ? s.cpu.toFixed(0) : '--';
@@ -139,11 +130,7 @@ export function hydrateHistory(samples) {
     }
 
     const now = Date.now();
-    pruneHistory(history.host.cpu, now);
-    pruneHistory(history.host.ram, now);
-    pruneHistory(history.host.temp, now);
-    pruneHistory(history.host.netTx, now);
-    pruneHistory(history.host.netRx, now);
+    pruneAllHistory(now);
     renderHostSparklines();
     updateHostTrendValues(stats);
 }
@@ -174,6 +161,14 @@ function pruneHistory(list, now) {
     if (firstValidIndex > 0) {
         list.splice(0, firstValidIndex);
     }
+}
+
+function pruneAllHistory(now) {
+    pruneHistory(history.host.cpu, now);
+    pruneHistory(history.host.ram, now);
+    pruneHistory(history.host.temp, now);
+    pruneHistory(history.host.netTx, now);
+    pruneHistory(history.host.netRx, now);
 }
 
 function renderHostSparklines() {

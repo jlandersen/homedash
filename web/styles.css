@@ -702,9 +702,6 @@ body.view-small .app-card-status {
 .app-card-icon .app-icon {
     width: 24px;
     height: 24px;
-}
-
-.app-card-icon .app-icon {
     display: block;
 }
 

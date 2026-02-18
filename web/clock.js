@@ -28,7 +28,7 @@ export function buildClockFormatters() {
     lastTimeFormat24h = config.timeFormat24h;
 }
 
-export function updateClock() {
+function updateClock() {
     const now = new Date();
     if (!timeFormatter || lastTimeFormat24h !== config.timeFormat24h) {
         buildClockFormatters();

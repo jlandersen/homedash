@@ -15,9 +15,7 @@ let isEditMode = false;
 let editAppsDraft = [];
 let editCategoryOrderDraft = [];
 
-const ICON_OPTIONS = ICON_IDS;
-
-export function initEditMode(els, onClose) {
+export function initEditMode(els) {
     editModal = els.editModal;
     editListEl = els.editListEl;
     editSaveBtn = els.editSaveBtn;
@@ -198,9 +196,6 @@ export function initEditMode(els, onClose) {
     });
 }
 
-export function getIsEditMode() {
-    return isEditMode;
-}
 
 export async function openEditMode(cfg) {
     if (!editModal) return;
@@ -287,10 +282,10 @@ function renderEditList() {
     const categoryDatalist = `<datalist id="categoryOptions">${categoryOptions}</datalist>`;
 
     editListEl.innerHTML = editAppsDraft.map((app, index) => {
-        const iconSelection = ICON_OPTIONS.includes(app.icon) ? app.icon : '';
+        const iconSelection = ICON_IDS.includes(app.icon) ? app.icon : '';
         const selectedLabel = iconSelection ? iconSelection : 'auto (box)';
         const selectedIconId = iconSelection || 'box';
-        const iconOptions = [''].concat(ICON_OPTIONS).map((icon) => {
+        const iconOptions = [''].concat(ICON_IDS).map((icon) => {
             const label = icon ? icon : 'auto (box)';
             const iconId = icon || 'box';
             const isSelected = icon === iconSelection ? ' aria-selected="true"' : '';

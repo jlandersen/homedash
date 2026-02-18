@@ -262,13 +262,18 @@ function renderApps(appList) {
     appGridEl.innerHTML = html || '<div class="loading">No apps configured. Edit apps.yaml to add some!</div>';
 }
 
+function appCardId(app) {
+    return btoa(app.name + '|' + app.url).replace(/[^a-zA-Z0-9]/g, '');
+}
+
 function appsStructureChanged(oldApps, newApps) {
     if (oldApps.length !== newApps.length) return true;
     for (let i = 0; i < oldApps.length; i++) {
         if (oldApps[i].name !== newApps[i].name ||
             oldApps[i].url !== newApps[i].url ||
             oldApps[i].category !== newApps[i].category ||
-            oldApps[i].icon !== newApps[i].icon) {
+            oldApps[i].icon !== newApps[i].icon ||
+            oldApps[i].notes !== newApps[i].notes) {
             return true;
         }
     }
@@ -277,8 +282,7 @@ function appsStructureChanged(oldApps, newApps) {
 
 function updateAppStatuses(appList) {
     appList.forEach((app) => {
-        const appId = btoa(app.name + '|' + app.url).replace(/[^a-zA-Z0-9]/g, '');
-        const card = appGridEl.querySelector(`[data-app-id="${appId}"]`);
+        const appId = appCardId(app);
         if (!card) return;
 
         const statusDot = card.querySelector('.status-dot');
@@ -298,7 +302,7 @@ function renderAppCard(app) {
     const iconId = ICON_IDS.includes(app.icon) ? app.icon : 'box';
     const icon = renderIcon(iconId);
     const statusClass = app.status === 'UP' ? 'up' : app.status === 'DOWN' ? 'down' : app.status === 'SKIPPED' ? 'skipped' : '';
-    const appId = btoa(app.name + '|' + app.url).replace(/[^a-zA-Z0-9]/g, '');
+    const appId = appCardId(app);
     const notesTooltip = app.notes ? `<div class="app-card-notes">${escapeHtml(app.notes)}</div>` : '';
 
     return `
