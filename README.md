@@ -19,7 +19,6 @@ Minimal dependencies, single binary, easy configuration via YAML manifest.
 - **Dark/Light theme** - Toggle with localStorage persistence
 - **Command palette** - Quick launch apps with `Cmd/Ctrl+K`
 - **Responsive** - Works on desktop and mobile
-- **Optimized static assets** - Minified and pre-gzipped in the embedded binary
 
 ## Quick Start
 
