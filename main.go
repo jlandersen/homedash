@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"io/fs"
@@ -76,12 +77,21 @@ func main() {
 		Handler: mux,
 	}
 
+	var redirectServer *http.Server
+
 	go func() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
 
 		log.Println("Shutting down...")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		if redirectServer != nil {
+			redirectServer.Shutdown(ctx)
+		}
 		if checker != nil {
 			checker.Stop()
 		}
@@ -91,7 +101,7 @@ func main() {
 		if manifestMgr != nil {
 			manifestMgr.Close()
 		}
-		server.Close()
+		server.Shutdown(ctx)
 	}()
 
 	if cfg.TLSEnabled {
@@ -115,7 +125,7 @@ func main() {
 					}
 					http.Redirect(w, r, target, http.StatusMovedPermanently)
 				})
-				redirectServer := &http.Server{
+				redirectServer = &http.Server{
 					Addr:    fmt.Sprintf(":%d", cfg.TLSRedirectPort),
 					Handler: redirectHandler,
 				}
