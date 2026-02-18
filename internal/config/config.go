@@ -27,7 +27,7 @@ type Config struct {
 }
 
 func Load() *Config {
-	return &Config{
+	cfg := &Config{
 		Port:          getEnvInt("HOMEDASH_PORT", 8080),
 		ManifestPath:  getEnvString("HOMEDASH_MANIFEST", "./apps.yaml"),
 		CheckInterval: getEnvDuration("HOMEDASH_CHECK_INTERVAL", 30*time.Second),
@@ -36,7 +36,6 @@ func Load() *Config {
 		// TLS - enabled if both cert and key are provided
 		TLSCertFile:     getEnvString("HOMEDASH_TLS_CERT", ""),
 		TLSKeyFile:      getEnvString("HOMEDASH_TLS_KEY", ""),
-		TLSEnabled:      getEnvString("HOMEDASH_TLS_CERT", "") != "" && getEnvString("HOMEDASH_TLS_KEY", "") != "",
 		TLSRedirectPort: getEnvInt("HOMEDASH_TLS_REDIRECT", 0),
 
 		// UI settings
@@ -48,6 +47,8 @@ func Load() *Config {
 		ShowNetRX:     getEnvBool("HOMEDASH_SHOW_NET_RX", true),
 		AllowEdit:     getEnvBool("HOMEDASH_ALLOW_EDIT", true),
 	}
+	cfg.TLSEnabled = cfg.TLSCertFile != "" && cfg.TLSKeyFile != ""
+	return cfg
 }
 
 func getEnvString(key, defaultVal string) string {

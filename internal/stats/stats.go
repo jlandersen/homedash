@@ -1,7 +1,6 @@
 package stats
 
 import (
-	"runtime"
 	"sync"
 	"time"
 
@@ -146,35 +145,16 @@ func (c *Collector) Latest() (SystemStats, bool) {
 }
 
 func (c *Collector) getTemperature() *float64 {
-	// Temperature sensors are platform-specific
-	if runtime.GOOS == "darwin" {
-		// macOS - gopsutil has limited support, try anyway
-		temps, err := host.SensorsTemperatures()
-		if err == nil && len(temps) > 0 {
-			// Find CPU temperature
-			for _, temp := range temps {
-				if temp.Temperature > 0 {
-					val := temp.Temperature
-					return &val
-				}
-			}
-		}
-		// Fallback - temperature not available on macOS without additional tools
+	temps, err := host.SensorsTemperatures()
+	if err != nil || len(temps) == 0 {
 		return nil
 	}
-
-	// Linux and other platforms
-	temps, err := host.SensorsTemperatures()
-	if err == nil && len(temps) > 0 {
-		// Try to find CPU/core temperature
-		for _, temp := range temps {
-			if temp.Temperature > 0 {
-				val := temp.Temperature
-				return &val
-			}
+	for _, temp := range temps {
+		if temp.Temperature > 0 {
+			val := temp.Temperature
+			return &val
 		}
 	}
-
 	return nil
 }
 
@@ -238,5 +218,3 @@ func (c *Collector) pruneLocked(cutoff time.Time) {
 		c.history = c.history[idx:]
 	}
 }
-
-// formatNetworkRate is no longer needed - removed

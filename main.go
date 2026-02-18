@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -39,7 +40,8 @@ func main() {
 	checker := health.NewChecker(manifestMgr, cfg.CheckInterval, cfg.CheckTimeout)
 
 	statsCollector := stats.NewCollector()
-	statsCollector.Start(2 * time.Second)
+	const statsInterval = 2 * time.Second
+	statsCollector.Start(statsInterval)
 
 	uiConfig := api.UIConfig{
 		TimeFormat24h: cfg.TimeFormat24h,
@@ -50,7 +52,7 @@ func main() {
 		ShowNetRX:     cfg.ShowNetRX,
 		AllowEdit:     cfg.AllowEdit,
 	}
-	handler := api.NewHandler(checker, statsCollector, manifestMgr, uiConfig)
+	handler := api.NewHandler(checker, statsCollector, manifestMgr, uiConfig, statsInterval)
 
 	checker.Start(func(statuses []health.AppStatus) {
 		handler.BroadcastApps(statuses)
@@ -92,15 +94,9 @@ func main() {
 		if redirectServer != nil {
 			redirectServer.Shutdown(ctx)
 		}
-		if checker != nil {
-			checker.Stop()
-		}
-		if statsCollector != nil {
-			statsCollector.Stop()
-		}
-		if manifestMgr != nil {
-			manifestMgr.Close()
-		}
+		checker.Stop()
+		statsCollector.Stop()
+		manifestMgr.Close()
 		server.Shutdown(ctx)
 	}()
 
@@ -108,21 +104,11 @@ func main() {
 		if cfg.TLSRedirectPort > 0 {
 			go func() {
 				redirectHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					target := fmt.Sprintf("https://%s:%d%s", r.Host, cfg.Port, r.URL.RequestURI())
-					// Strip port from host if present
-					if host := r.Host; host != "" {
-						if colonIdx := len(host) - 1; colonIdx > 0 {
-							for i := len(host) - 1; i >= 0; i-- {
-								if host[i] == ':' {
-									target = fmt.Sprintf("https://%s:%d%s", host[:i], cfg.Port, r.URL.RequestURI())
-									break
-								}
-								if host[i] == ']' || host[i] == '.' {
-									break
-								}
-							}
-						}
+					host := r.Host
+					if h, _, err := net.SplitHostPort(r.Host); err == nil {
+						host = h
 					}
+					target := fmt.Sprintf("https://%s:%d%s", host, cfg.Port, r.URL.RequestURI())
 					http.Redirect(w, r, target, http.StatusMovedPermanently)
 				})
 				redirectServer = &http.Server{

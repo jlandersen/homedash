@@ -26,21 +26,23 @@ type UIConfig struct {
 }
 
 type Handler struct {
-	checker   *health.Checker
-	stats     *stats.Collector
-	manifest  *manifest.Manager
-	uiConfig  UIConfig
-	clients   map[chan []byte]bool
-	clientsMu sync.RWMutex
+	checker       *health.Checker
+	stats         *stats.Collector
+	manifest      *manifest.Manager
+	uiConfig      UIConfig
+	statsInterval time.Duration
+	clients       map[chan []byte]bool
+	clientsMu     sync.RWMutex
 }
 
-func NewHandler(checker *health.Checker, statsCollector *stats.Collector, manifestMgr *manifest.Manager, uiConfig UIConfig) *Handler {
+func NewHandler(checker *health.Checker, statsCollector *stats.Collector, manifestMgr *manifest.Manager, uiConfig UIConfig, statsInterval time.Duration) *Handler {
 	return &Handler{
-		checker:  checker,
-		stats:    statsCollector,
-		manifest: manifestMgr,
-		uiConfig: uiConfig,
-		clients:  make(map[chan []byte]bool),
+		checker:       checker,
+		stats:         statsCollector,
+		manifest:      manifestMgr,
+		uiConfig:      uiConfig,
+		statsInterval: statsInterval,
+		clients:       make(map[chan []byte]bool),
 	}
 }
 
@@ -53,14 +55,18 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux, webFS fs.FS) {
 	mux.Handle("/", NewStaticHandler(webFS))
 }
 
+func writeJSONHeaders(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 func (h *Handler) handleApps(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	writeJSONHeaders(w)
 
 	statuses := h.checker.GetStatuses()
 	if err := json.NewEncoder(w).Encode(statuses); err != nil {
@@ -74,8 +80,7 @@ func (h *Handler) handleManifest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	writeJSONHeaders(w)
 
 	switch r.Method {
 	case http.MethodGet:
@@ -154,8 +159,7 @@ func (h *Handler) handleConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	writeJSONHeaders(w)
 
 	if err := json.NewEncoder(w).Encode(h.uiConfig); err != nil {
 		log.Printf("Error encoding config response: %v", err)
@@ -168,8 +172,7 @@ func (h *Handler) handleStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	writeJSONHeaders(w)
 
 	history := h.stats.History()
 	if err := json.NewEncoder(w).Encode(history); err != nil {
@@ -206,7 +209,7 @@ func (h *Handler) handleSSE(w http.ResponseWriter, r *http.Request) {
 	h.sendAppsToClient(w, flusher)
 	h.sendStatsToClient(w, flusher)
 
-	statsTicker := time.NewTicker(2 * time.Second)
+	statsTicker := time.NewTicker(h.statsInterval)
 	defer statsTicker.Stop()
 
 	for {
@@ -246,7 +249,7 @@ func (h *Handler) sendAppsToClient(w http.ResponseWriter, flusher http.Flusher) 
 func (h *Handler) sendStatsToClient(w http.ResponseWriter, flusher http.Flusher) {
 	sysStats, ok := h.stats.Latest()
 	if !ok {
-		sysStats = h.stats.Get()
+		return
 	}
 	data, err := json.Marshal(sysStats)
 	if err != nil {
