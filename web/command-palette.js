@@ -19,6 +19,12 @@ export function initCommandPalette(els) {
         if (e.target === commandPalette) closeCommandPalette();
     });
 
+    searchResults.addEventListener('click', (e) => {
+        const result = e.target.closest('.search-result');
+        if (!result) return;
+        launchApp(result.dataset.url);
+    });
+
     searchInput.addEventListener('input', (e) => {
         filterApps(e.target.value);
     });
@@ -85,7 +91,7 @@ function renderSearchResults(results, message) {
         const icon = renderIcon(iconId);
         const selectedClass = index === selectedIndex ? ' selected' : '';
         html += `
-            <div class="search-result${selectedClass}" data-index="${index}" onclick="launchApp('${app.url}')">
+            <div class="search-result${selectedClass}" data-index="${index}" data-url="${escapeHtml(app.url)}">
                 <div class="search-result-icon">${icon}</div>
                 <div class="search-result-info">
                     <div class="search-result-name">${escapeHtml(app.name)}</div>

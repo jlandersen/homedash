@@ -2,7 +2,7 @@ import { appsStore, configStore, NOTES_DELAY_MS, ICON_IDS } from './state.js';
 import { initClock, buildClockFormatters } from './clock.js';
 import { initStats, initStatsDetails, initSparklineCleanup, renderStats, hydrateHistory, applyStatsVisibility } from './stats.js';
 import { initEditMode, openEditMode, closeEditMode, applyEditVisibility } from './editor.js';
-import { initCommandPalette, openCommandPalette, closeCommandPalette, launchApp } from './command-palette.js';
+import { initCommandPalette, openCommandPalette, closeCommandPalette } from './command-palette.js';
 import { escapeHtml, renderIcon } from './utils.js';
 
 let appGridEl;
@@ -65,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     appsStore.subscribe((apps) => {
         renderApps(apps);
-        applyEditVisibility(configStore.get());
     });
 
     configStore.subscribe((cfg) => {
@@ -81,9 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchStatsHistory();
     connectSSE();
 });
-
-// expose launchApp for onclick handlers in search results
-window.launchApp = launchApp;
 
 function initTheme(themeBtn) {
     const savedTheme = localStorage.getItem('homedash-theme');
@@ -214,11 +210,9 @@ function connectSSE() {
     es.addEventListener('apps', (e) => {
         try {
             const newApps = JSON.parse(e.data);
-            const currentApps = appsStore.get();
-            if (appsStructureChanged(currentApps, newApps)) {
+            if (appsStructureChanged(appsStore.get(), newApps)) {
                 appsStore.set(newApps);
             } else {
-                appsStore.set(newApps);
                 updateAppStatuses(newApps);
             }
         } catch (err) {

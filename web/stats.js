@@ -84,6 +84,7 @@ export function initSparklineCleanup() {
 }
 
 export function renderStats(s) {
+    statsStore.set(s);
     const now = Date.now();
     pushHistory(history.host.cpu, now, s.cpu);
     pushHistory(history.host.ram, now, s.ram);
